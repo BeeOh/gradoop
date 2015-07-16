@@ -1,12 +1,9 @@
 package org.biiig.fsm.gspan;
 
 import org.apache.commons.lang3.StringUtils;
-import org.biiig.fsm.EdgePattern;
-import org.biiig.model.LabeledEdge;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 /**

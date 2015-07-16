@@ -1,7 +1,7 @@
 package org.biiig.fsm.gspan;
 
-import org.biiig.fsm.EdgePattern;
-import org.biiig.fsm.FrequentLabel;
+import org.biiig.fsm.gspan.common.EdgePattern;
+import org.biiig.fsm.gspan.common.FrequentLabel;
 import org.biiig.model.LabeledEdge;
 import org.biiig.model.LabeledGraph;
 import org.biiig.model.LabeledVertex;
@@ -22,11 +22,11 @@ public class SingleThreadGSpan {
     Map<LabeledGraph, Float> frequentSubgraphs = new HashMap<>();
 
     // find and encode frequent vertex labels
-    Map<String, Integer> vertexLabelDictionary =
+    Map<String, Long> vertexLabelDictionary =
       getFrequentLabelDictionary(getVertexLabelCounts(graphs), minSupport);
 
     // find and encode frequent edge labels
-    Map<String, Integer> edgeLabelDictionary = getFrequentLabelDictionary(
+    Map<String, Long> edgeLabelDictionary = getFrequentLabelDictionary(
       getEdgeLabelCounts(graphs, vertexLabelDictionary), minSupport);
 
     // generate search space
@@ -224,10 +224,10 @@ public class SingleThreadGSpan {
   }
 
 
-  private Map<String, Integer> getVertexLabelCounts(List<LabeledGraph> graphs) {
+  private Map<String, Long> getVertexLabelCounts(List<LabeledGraph> graphs) {
 
     // count vertex labels
-    Map<String, Integer> vertexLabelCounts = new HashMap<>();
+    Map<String, Long> vertexLabelCounts = new HashMap<>();
 
     for (LabeledGraph graph : graphs) {
 
@@ -238,8 +238,8 @@ public class SingleThreadGSpan {
       }
 
       for (String vertexLabel : vertexLabels) {
-        Integer oldCount = vertexLabelCounts.get(vertexLabel);
-        Integer count = oldCount == null ? 1 : oldCount + 1;
+        Long oldCount = vertexLabelCounts.get(vertexLabel);
+        Long count = oldCount == null ? 1 : oldCount + 1;
         vertexLabelCounts.put(vertexLabel, count);
       }
     }
@@ -247,11 +247,11 @@ public class SingleThreadGSpan {
     return vertexLabelCounts;
   }
 
-  private Map<String, Integer> getEdgeLabelCounts(List<LabeledGraph> graphs,
-    Map<String, Integer> vertexLabelDictionary) {
+  private Map<String, Long> getEdgeLabelCounts(List<LabeledGraph> graphs,
+    Map<String, Long> vertexLabelDictionary) {
 
     // count labels of edged without infrequent vertex labels
-    Map<String, Integer> edgeLabelCounts = new HashMap<>();
+    Map<String, Long> edgeLabelCounts = new HashMap<>();
 
     for (LabeledGraph graph : graphs) {
 
@@ -268,8 +268,8 @@ public class SingleThreadGSpan {
 
 
       for (String edgeLabel : edgeLabels) {
-        Integer oldCount = edgeLabelCounts.get(edgeLabel);
-        Integer count = oldCount == null ? 1 : oldCount + 1;
+        Long oldCount = edgeLabelCounts.get(edgeLabel);
+        Long count = oldCount == null ? 1 : oldCount + 1;
         edgeLabelCounts.put(edgeLabel, count);
       }
     }
@@ -277,15 +277,15 @@ public class SingleThreadGSpan {
     return edgeLabelCounts;
   }
 
-  private Map<String, Integer> getFrequentLabelDictionary(
-    Map<String, Integer> labelCounts, int minSupport) {
+  private Map<String, Long> getFrequentLabelDictionary(
+    Map<String, Long> labelCounts, int minSupport) {
 
     List<FrequentLabel> frequentLabels = new ArrayList<>();
 
-    for (Map.Entry<String, Integer> labelSupport : labelCounts.entrySet()) {
+    for (Map.Entry<String, Long> labelSupport : labelCounts.entrySet()) {
 
       String label = labelSupport.getKey();
-      int support = labelSupport.getValue();
+      Long support = labelSupport.getValue();
 
       if (support >= minSupport) {
         frequentLabels.add(new FrequentLabel(label, support));
@@ -295,8 +295,8 @@ public class SingleThreadGSpan {
     Collections.sort(frequentLabels);
 
     // create vertex dictionary
-    Map<String, Integer> labelDictionary = new Hashtable<>();
-    int labelID = 0;
+    Map<String, Long> labelDictionary = new Hashtable<>();
+    Long labelID = 0l;
 
     for (FrequentLabel label : frequentLabels) {
       labelID++;
@@ -307,8 +307,8 @@ public class SingleThreadGSpan {
   }
 
   private List<LabeledGraph> getSearchSpace(List<LabeledGraph> graphs,
-    Map<String, Integer> vertexLabelDictionary,
-    Map<String, Integer> edgeLabelDictionary) {
+    Map<String, Long> vertexLabelDictionary,
+    Map<String, Long> edgeLabelDictionary) {
     List<LabeledGraph> searchSpace = new ArrayList<>();
 
     for (LabeledGraph graph : graphs) {
@@ -320,18 +320,18 @@ public class SingleThreadGSpan {
       for (LabeledEdge edge : graph.getEdges()) {
 
         LabeledVertex sourceVertex = edge.getSourceVertex();
-        Integer sourceVertexSearchLabel =
+        Long sourceVertexSearchLabel =
           vertexLabelDictionary.get(sourceVertex.getLabel());
 
         // if source vertex label is frequent
         if (sourceVertexSearchLabel != null) {
           LabeledVertex targetVertex = edge.getTargetVertex();
-          Integer targetVertexSearchLabel =
+          Long targetVertexSearchLabel =
             vertexLabelDictionary.get(targetVertex.getLabel());
 
           // and target vertex label is frequent
           if (targetVertexSearchLabel != null) {
-            Integer edgeSearchLabel = edgeLabelDictionary.get(edge.getLabel());
+            Long edgeSearchLabel = edgeLabelDictionary.get(edge.getLabel());
 
             // and edge label is frequent
             if (edgeSearchLabel != null) {

@@ -1,4 +1,4 @@
-package org.biiig.fsm;
+package org.biiig.fsm.gspan.common;
 
 /**
  * Created by peet on 09.07.15.
@@ -6,9 +6,9 @@ package org.biiig.fsm;
 public class FrequentLabel implements Comparable<FrequentLabel> {
 
   private final String label;
-  private final int support;
+  private final Long support;
 
-  public FrequentLabel(String label, int support) {
+  public FrequentLabel(String label, Long support) {
     this.label = label;
     this.support = support;
   }
@@ -16,7 +16,7 @@ public class FrequentLabel implements Comparable<FrequentLabel> {
 
   @Override
   public int compareTo(FrequentLabel other) {
-    int comparison = other.support - this.support;
+    int comparison = (int)(other.support - this.support);
 
     if (comparison == 0) {
 

@@ -1,7 +1,6 @@
-package org.biiig.fsm;
+package org.biiig.fsm.gspan.common;
 
 import org.biiig.model.LabeledEdge;
-import org.biiig.model.LabeledVertex;
 
 /**
  * Created by peet on 09.07.15.
