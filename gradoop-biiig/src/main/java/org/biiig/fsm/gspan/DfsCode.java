@@ -1,37 +1,40 @@
 package org.biiig.fsm.gspan;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 /**
  * Created by peet on 26.06.15.
  */
-public class DfsCode implements Comparable<DfsCode> {
+public class DfsCode implements Comparable<DfsCode>, Cloneable {
 
-  private final List<DfsEdge> dfsEdges = new ArrayList<>();
+  private final ArrayList<DfsEdge> edges = new ArrayList<>();
 
-  public List<DfsEdge> getDfsEdges() {
-    return dfsEdges;
+  public List<DfsEdge> getEdges() {
+    return edges;
   }
 
   public String toString(){
-    return StringUtils.join(dfsEdges,",");
+    return "[" + StringUtils.join(edges,",") +"]";
   }
 
 
   public void add(DfsEdge dfsEdge) {
-    dfsEdges.add(dfsEdge);
+    edges.add(dfsEdge);
   }
 
   public int positionOf(DfsEdge dfsEdge) {
     int position = -1;
 
-    for(DfsEdge existingDfsEdge : dfsEdges) {
+    for(DfsEdge existingDfsEdge : edges) {
       if(existingDfsEdge.compareTo(dfsEdge) == 0) {
-        position = dfsEdges.indexOf(existingDfsEdge);
+        position = edges.indexOf(existingDfsEdge);
         break;
       }
     }
@@ -43,8 +46,8 @@ public class DfsCode implements Comparable<DfsCode> {
   public int compareTo(DfsCode other) {
     int comparison = 0;
 
-    Iterator<DfsEdge> ownIterator = this.dfsEdges.iterator();
-    Iterator<DfsEdge> otherIterator = other.dfsEdges.iterator();
+    Iterator<DfsEdge> ownIterator = this.edges.iterator();
+    Iterator<DfsEdge> otherIterator = other.edges.iterator();
 
     while(comparison == 0 && ownIterator.hasNext() && otherIterator.hasNext()) {
       comparison = ownIterator.next().compareTo(otherIterator.next());
@@ -59,5 +62,53 @@ public class DfsCode implements Comparable<DfsCode> {
     }
 
     return comparison;
+  }
+
+  public Collection<Integer> getRightmostTailPositions() {
+    Collection<Integer> rightmostTailPositions = new ArrayList<>();
+
+    DfsEdge lastEdge = edges.get(edges.size()-1);
+    int lastFromPosition = lastEdge.getFromPosition();
+    rightmostTailPositions.add(lastFromPosition);
+
+    while (lastFromPosition > 0) {
+      for(DfsEdge edge : edges) {
+        if (edge.getToPosition() == lastFromPosition){
+          lastFromPosition = edge.getFromPosition();
+          rightmostTailPositions.add(lastFromPosition);
+        }
+      }
+    }
+
+    return rightmostTailPositions;
+  }
+
+  public DfsCode clone() {
+    DfsCode clone = new DfsCode();
+    clone.getEdges().addAll(edges);
+    return clone;
+  }
+
+  @Override
+  public int hashCode(){
+    HashCodeBuilder builder = new HashCodeBuilder();
+
+    for (DfsEdge edge : edges) {
+      builder.append(edge.hashCode());
+    }
+
+    return builder.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object other){
+    boolean equals = false;
+
+    if (other instanceof DfsCode) {
+      DfsCode otherDfsCode = (DfsCode) other;
+      equals = this.edges.equals(otherDfsCode.edges);
+    }
+
+    return equals;
   }
 }

@@ -1,16 +1,16 @@
 package org.biiig.fsm.gspan.multithreaded;
 
-import com.google.common.collect.Sets;
-import org.biiig.fsm.gspan.common.EdgePattern;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import org.biiig.fsm.gspan.DfsCode;
+import org.biiig.fsm.gspan.DfsCodeMapper;
 import org.biiig.fsm.gspan.GSpanGraph;
-import org.biiig.model.LabeledEdge;
 import org.biiig.model.LabeledGraph;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -23,6 +23,10 @@ public class MTGSpanWorker {
    */
   private final MTGSpanMaster master;
   /**
+   * worker id
+   */
+  private final int partition;
+  /**
    * thread of this worker
    */
   private Thread thread;
@@ -33,82 +37,104 @@ public class MTGSpanWorker {
   /**
    * local vertex label counts
    */
-  private final Map<String,Long> vertexLabelSupports = new HashMap<>();
+  private final Map<String,Integer> vertexLabelSupports = new HashMap<>();
   /**
    * local edge label counts
    */
-  private final Map<String,Long> edgeLabelSupports = new HashMap<>();
+  private final Map<String,Integer> edgeLabelSupports = new HashMap<>();
   /**
    * search space of GSpan graphs on this worker
    */
-  private final Collection<GSpanGraph> searchSpace = new ArrayList<>();
+  private Map<DfsCode,Collection<DfsCodeMapper>> dfsCodeMappersMap =
+    new TreeMap<>();
   /**
-   * index of graphs supporting an edge pattern
+   * DFS codes and local graphs supporting the code
    */
-  private final NavigableMap<EdgePattern,Map<LabeledGraph,Set<LabeledEdge>>>
-    edgePatternIndex = new TreeMap<>();
+  private Map<DfsCode,Set<GSpanGraph>> dfsCodeSupportersMap = new HashMap<>();
+  /**
+   * collection of globally frequent and locally occurring DFS codes
+   */
+  private Collection<DfsCode> growableDfsCodes = new ArrayList<>();
   /**
    * local copy of global edge label dictionary
    */
-  private final Map<String, Long> edgeLabelDictionary = new HashMap<>();
+  private final BiMap<String, Integer> edgeLabelDictionary = HashBiMap.create();
   /**
    * local copy of global vertex label dictionary
    */
-  private final Map<String, Long> vertexLabelDictionary = new HashMap<>();
+  private final BiMap<String, Integer> vertexLabelDictionary = HashBiMap.create();
+
+
+  private Map<LabeledGraph, Float> frequentSubgraphs = new HashMap<>();
 
   /**
    * constructor
    * @param MTGSpanMaster master node
+   * @param partition
    */
-  public MTGSpanWorker(MTGSpanMaster MTGSpanMaster) {
+  public MTGSpanWorker(MTGSpanMaster MTGSpanMaster, int partition) {
     this.master = MTGSpanMaster;
+    this.partition = partition;
   }
   /**
    * start counting vertex labels in own thread
    */
-  public void startVertexLabelCount() {
+  public void countVertexLabels() {
     thread = new Thread(new MTGSpanVertexLabelCounter(this));
     thread.start();
   }
   /**
    * start counting edge labels in own thread
    */
-  public void startEdgeLabelCount() {
+  public void countEdgeLabels() {
     thread = new Thread(new MTGSpanEdgeLabelCounter(this));
     thread.start();
   }
+
   /**
-   * project all local graphs to GSpan graphs using the global dictionaries for
-   * vertex and edge labels
+   * generates local search space based on index
    */
-  public void indexEdgePatterns() {
-    thread = new Thread(new MTGSpanEdgePatternIndexer(this));
+  public void initializeSearchSpace() {
+    thread = new Thread(new MTGSpanSearchSpaceInitializer(this));
     thread.start();
   }
 
   /**
-   * remove globally infrequent edges from local edge index
-   * @param infrequentEdgePatterns
+   * grows all local DFS codes by one edge following GSPan growth restrictions
    */
-  public void processInfrequentEdgePatterns(
-    Set<EdgePattern> infrequentEdgePatterns) {
-    thread = new Thread(new MTGSpanEdgeIndexRemover(this, Sets.newHashSet
-      (infrequentEdgePatterns)));
+  public void growFrequentDfsCodes() {
+    thread = new Thread(new MTGSpanDfsCodeGrower(this));
     thread.start();
   }
 
-  /**
-   * returns the support count of all locally occurring edge patterns
-   */
-  public Map<EdgePattern,Long> getEdgePatternSupports() {
-    Map<EdgePattern,Long> edgePatternSupports = new HashMap<>();
-    for(Map.Entry<EdgePattern, Map<LabeledGraph, Set<LabeledEdge>>> edgePatternSupporters :
-      edgePatternIndex.entrySet()) {
-      edgePatternSupports.put(edgePatternSupporters.getKey(),
-        Long.valueOf(edgePatternSupporters.getValue().size()));
+
+  public void consumeVertexLabelDictionary() {
+    thread = new Thread(new MTGSpanVertexLabelDictionaryConsumer(this));
+    thread.start();
+  }
+
+  public void consumeEdgeLabelDictionary() {
+    thread = new Thread(new MTGSpanEdgeLabelDictionaryConsumer(this));
+    thread.start();
+  }
+
+  public Map<DfsCode, Integer> getDfsCodeSupports() {
+    Map<DfsCode,Integer> dfsCodeSupports = new HashMap<>();
+
+    for(Map.Entry<DfsCode,Set<GSpanGraph>> dfsCodeSupporters :
+      dfsCodeSupportersMap.entrySet()) {
+      dfsCodeSupports.put(dfsCodeSupporters.getKey(),
+        dfsCodeSupporters.getValue().size());
     }
-    return edgePatternSupports;
+
+    return dfsCodeSupports;
   }
+
+  public void generateGraphsFromFrequentDfsCodes() {
+    thread = new Thread(new MTSpanFrequentSubgraphGenerator(this));
+    thread.start();
+  }
+
   /**
    * to string method
    * @return string representation
@@ -117,40 +143,56 @@ public class MTGSpanWorker {
   public String toString() {
     return thread.toString() + "(" + graphs.size() + " graphs)";
   }
+
   /**
    * getters and setters
    */
-  public Map<String, Long> getEdgeLabelSupports() {
+  public Map<String, Integer> getEdgeLabelSupports() {
     return edgeLabelSupports;
   }
-  public Map<String, Long> getVertexLabelSupports() {
+  public Map<String, Integer> getVertexLabelSupports() {
     return vertexLabelSupports;
   }
   public Thread getThread() {
     return thread;
   }
+
   public Collection<LabeledGraph> getGraphs() {
     return graphs;
   }
 
-  public Collection<GSpanGraph> getSearchSpace() {
-    return searchSpace;
+  public Map<DfsCode, Collection<DfsCodeMapper>> getDfsCodeMappersMap() {
+    return dfsCodeMappersMap;
   }
-
-  public NavigableMap<EdgePattern, Map<LabeledGraph, Set<LabeledEdge>>> getEdgePatternIndex() {
-    return edgePatternIndex;
-  }
-
-  //public MTGSpanMaster getMaster() {
-  //  return master;
-  //}
-
-
-  public Map<String, Long> getEdgeLabelDictionary() {
+  public BiMap<String, Integer> getEdgeLabelDictionary() {
     return edgeLabelDictionary;
   }
-
-  public Map<String, Long> getVertexLabelDictionary() {
+  public BiMap<String, Integer> getVertexLabelDictionary() {
     return vertexLabelDictionary;
+  }
+
+  public Collection<DfsCode> getGrowableDfsCodes() {
+    return growableDfsCodes;
+  }
+
+  public void consumeFrequentDfsCodes() {
+    thread = new Thread(new MTGSpanFrequentDfsCodeConsumer(this));
+    thread.start();
+  }
+
+  public MTGSpanMaster getMaster() {
+    return master;
+  }
+
+  public Map<DfsCode, Set<GSpanGraph>> getDfsCodeSupportersMap() {
+    return dfsCodeSupportersMap;
+  }
+
+  public int getParition() {
+    return partition;
+  }
+
+  public Map<LabeledGraph, Float> getFrequentSubgraphs() {
+    return frequentSubgraphs;
   }
 }

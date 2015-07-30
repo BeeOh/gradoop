@@ -1,59 +1,82 @@
 package org.biiig.fsm.gspan;
 
-import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.biiig.model.LabeledEdge;
 import org.biiig.model.LabeledGraph;
-import org.biiig.model.LabeledVertex;
+import scala.Int;
 
 import java.util.*;
 
 /**
  * Created by peet on 07.07.15.
  */
-public class DfsCodeMapper implements Comparable<DfsCodeMapper> {
+public class DfsCodeMapper implements Cloneable{
 
-  private final LabeledGraph graph;
-  private final DfsCode dfsCode;
-  private final Map<DfsEdge,LabeledEdge> edgeMap = new HashMap<>();
+  private final GSpanGraph graph;
+  private final ArrayList<GSpanEdge> edges = new ArrayList<>();
+  private final ArrayList<GSpanVertex> vertices = new ArrayList<>();
 
-  public DfsCode getDfsCode() {
-    return dfsCode;
-  }
-
-  public DfsCodeMapper(DfsCode dfsCode, LabeledGraph graph) {
-    this.dfsCode = dfsCode;
+  public DfsCodeMapper(GSpanGraph graph) {
     this.graph = graph;
   }
 
-  @Override
-  public int compareTo(DfsCodeMapper other) {
-    return this.graph == other.graph
-      && this.dfsCode.compareTo(other.dfsCode)  == 0 ? 0 : 1;
-  }
-
-  public void map(DfsEdge dfsEdge, LabeledEdge edge) {
-    edgeMap.put(dfsEdge,edge);
-  }
 
   public String toString() {
-    StringBuffer buffer = new StringBuffer();
-    for(Map.Entry<DfsEdge,LabeledEdge> mapping : edgeMap.entrySet()) {
-      buffer.append(mapping.getKey());
-      buffer.append("=>");
-      buffer.append(mapping.getValue());
-    }
-    return buffer.toString();
+    return edges.toString();
+    //return StringUtils.join(edges,",");
+    //return String.valueOf(edges.size());
   }
 
-  public boolean contains(DfsEdge dfsEdge) {
-    return edgeMap.containsKey(dfsEdge);
-  }
-
-  public LabeledGraph getGraph() {
+  public GSpanGraph getGraph() {
     return graph;
   }
 
-  public boolean contains(LabeledEdge edge) {
-    return edgeMap.containsValue(edge);
+  public void add(GSpanEdge edge) {
+    this.edges.add(edge);
+  }
+
+  public void add(GSpanVertex vertex) {
+    this.vertices.add(vertex);
+  }
+
+  public GSpanVertex getRightmostVertex() {
+    return vertices.get(getRightmostVertexPosition());
+  }
+
+  public boolean isValidForGrowth(GSpanEdge edge) {
+    // not already mapped and lexicographically greater or equal
+    return !edges.contains(edge) && edge.compareTo(edges.get(0)) >= 0;
+  }
+
+  public boolean contains(GSpanVertex vertex) {
+    return vertices.contains(vertex);
+  }
+
+  public GSpanVertex getVertex(Integer position) {
+    return vertices.get(position);
+  }
+
+  public DfsCodeMapper clone() {
+    DfsCodeMapper clone = new DfsCodeMapper(graph);
+    clone.getVertices().addAll(vertices);
+    clone.getEdges().addAll(edges);
+    return clone;
+  }
+
+  public ArrayList<GSpanEdge> getEdges() {
+    return edges;
+  }
+
+  public ArrayList<GSpanVertex> getVertices() {
+    return vertices;
+  }
+
+  public Integer getRightmostVertexPosition() {
+    return vertices.size()-1;
+  }
+
+  public Integer positionOf(GSpanVertex vertex) {
+    return vertices.indexOf(vertex);
   }
 }

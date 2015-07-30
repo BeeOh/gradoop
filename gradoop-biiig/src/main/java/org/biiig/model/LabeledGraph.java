@@ -35,28 +35,24 @@ public class LabeledGraph {
   }
 
   public String toString() {
-    StringBuffer buffer = new StringBuffer();
     List<String> parts = new ArrayList<>();
 
-    buffer.append("<{");
-
-    for(Object vertex : vertices) {
-      parts.add(vertex.toString());
+    for(LabeledEdge edge : edges) {
+      parts.add(
+        "("
+          + vertices.indexOf(edge.getSourceVertex())
+          + ":"
+          + edge.getSourceVertex().getLabel()
+          + ")-"
+          + edge.getLabel()
+          + "->("
+          + vertices.indexOf(edge.getTargetVertex())
+          + ":"
+          + edge.getTargetVertex().getLabel()
+        + ")"
+      );
     }
-    buffer.append(StringUtils.join(parts, ","));
-
-    buffer.append("},{");
-    parts.clear();
-
-    for (LabeledEdge edge : edges) {
-      parts.add(edge.toString());
-    }
-    buffer.append(StringUtils.join(parts, ","));
-
-    buffer.append("}>");
-
-
-    return buffer.toString();
+    return "<" + StringUtils.join(parts,",") + ">";
   }
 
   public List<LabeledVertex> getVertices() {

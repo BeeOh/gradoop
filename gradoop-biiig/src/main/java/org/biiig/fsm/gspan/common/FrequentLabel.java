@@ -6,9 +6,9 @@ package org.biiig.fsm.gspan.common;
 public class FrequentLabel implements Comparable<FrequentLabel> {
 
   private final String label;
-  private final Long support;
+  private final Integer support;
 
-  public FrequentLabel(String label, Long support) {
+  public FrequentLabel(String label, Integer support) {
     this.label = label;
     this.support = support;
   }

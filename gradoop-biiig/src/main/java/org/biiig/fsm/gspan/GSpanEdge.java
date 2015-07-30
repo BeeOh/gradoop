@@ -5,27 +5,27 @@ package org.biiig.fsm.gspan;
  */
 public class GSpanEdge implements Comparable<GSpanEdge> {
 
-  private final GSpanVertex source;
-  private final Long label;
-  private final GSpanVertex target;
+  private final GSpanVertex sourceVertex;
+  private final Integer label;
+  private final GSpanVertex targetVertex;
 
-  public GSpanEdge(GSpanVertex source, Long label, GSpanVertex target) {
-    this.source = source;
+  public GSpanEdge(GSpanVertex sourceVertex, Integer label, GSpanVertex targetVertex) {
+    this.sourceVertex = sourceVertex;
     this.label = label;
-    this.target = target;
+    this.targetVertex = targetVertex;
   }
 
   @Override
   public int compareTo(GSpanEdge other) {
 
-    int comparison = this.source.compareTo(other.source);
+    int comparison = this.sourceVertex.compareTo(other.sourceVertex);
 
     if(comparison == 0) {
       comparison = (int)(this.label - other.label);
     }
 
     if(comparison == 0) {
-      comparison = this.target.compareTo(other.target);
+      comparison = this.targetVertex.compareTo(other.targetVertex);
     }
 
     return comparison;
@@ -33,6 +33,22 @@ public class GSpanEdge implements Comparable<GSpanEdge> {
 
   @Override
   public String toString(){
-    return source.toString() + "-" + this.label + "->" + target.toString();
+    return sourceVertex.toString() + "-" + this.label + "->" + targetVertex.toString();
+  }
+
+  public Integer getLabel() {
+    return label;
+  }
+
+  public GSpanVertex getOtherVertex(GSpanVertex vertex) {
+    return vertex == sourceVertex ? targetVertex : sourceVertex;
+  }
+
+  public GSpanVertex getSourceVertex() {
+    return this.sourceVertex;
+  }
+
+  public GSpanVertex getTargetVertex() {
+    return targetVertex;
   }
 }

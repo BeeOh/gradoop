@@ -3,7 +3,7 @@ package org.biiig.fsm.gspan.multithreaded;
 /**
  * Created by peet on 15.07.15.
  */
-public abstract  class MTGSSpanRunnable implements Runnable {
+public abstract  class MTGSpanRunnable implements Runnable {
   /**
    * reference to calling worker
    */
@@ -13,7 +13,7 @@ public abstract  class MTGSSpanRunnable implements Runnable {
    * constructor
    * @param worker calling worker
    */
-  public MTGSSpanRunnable(MTGSpanWorker worker) {
+  public MTGSpanRunnable(MTGSpanWorker worker) {
     this.worker = worker;
   }
 }

@@ -12,13 +12,13 @@ public class GSpanGraph {
   private final Map<GSpanVertex,Set<GSpanEdge>> adjacencyLists =
     new HashMap<>();
 
-  public GSpanVertex newVertex(long label) {
+  public GSpanVertex newVertex(Integer label) {
     GSpanVertex vertex = new GSpanVertex(label);
     adjacencyLists.put(vertex,new HashSet<GSpanEdge>());
     return vertex;
   }
 
-  public GSpanEdge newEdge(GSpanVertex source, long label, GSpanVertex target)
+  public GSpanEdge newEdge(GSpanVertex source, Integer label, GSpanVertex target)
   {
     GSpanEdge edge = new GSpanEdge(source,label,target);
     adjacencyLists.get(source).add(edge);

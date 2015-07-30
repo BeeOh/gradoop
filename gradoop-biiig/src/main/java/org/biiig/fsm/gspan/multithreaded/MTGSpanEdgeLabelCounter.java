@@ -3,14 +3,10 @@ package org.biiig.fsm.gspan.multithreaded;
 import org.biiig.model.LabeledEdge;
 import org.biiig.model.LabeledGraph;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * Created by peet on 15.07.15.
  */
-public class MTGSpanEdgeLabelCounter extends MTGSSpanRunnable  {
+public class MTGSpanEdgeLabelCounter extends MTGSpanRunnable {
 
   /**
    * constructor
@@ -33,7 +29,7 @@ public class MTGSpanEdgeLabelCounter extends MTGSSpanRunnable  {
             .containsKey(edge.getTargetVertex().getLabel())) {
 
           String label = edge.getLabel();
-          Long oldCount = worker.getEdgeLabelSupports().get(label);
+          Integer oldCount = worker.getEdgeLabelSupports().get(label);
           worker.getEdgeLabelSupports().put(label,
             oldCount == null ? 1 : oldCount + 1);
         }

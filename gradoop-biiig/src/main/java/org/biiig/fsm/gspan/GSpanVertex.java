@@ -5,9 +5,9 @@ package org.biiig.fsm.gspan;
  */
 public class GSpanVertex implements Comparable<GSpanVertex> {
 
-  private final long label;
+  private final Integer label;
 
-  public GSpanVertex(long label) {
+  public GSpanVertex(Integer label) {
     this.label = label;
   }
 
@@ -19,5 +19,9 @@ public class GSpanVertex implements Comparable<GSpanVertex> {
   @Override
   public String toString(){
     return "(" + label + ")";
+  }
+
+  public Integer getLabel() {
+    return label;
   }
 }

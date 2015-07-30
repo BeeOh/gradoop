@@ -1,11 +1,14 @@
 package org.biiig.fsm.gspan.multithreaded;
 
+import io.netty.util.internal.ConcurrentSet;
 import org.apache.commons.lang3.StringUtils;
-import org.biiig.fsm.gspan.common.EdgePattern;
+import org.biiig.fsm.gspan.DfsCode;
 import org.biiig.fsm.gspan.common.FrequentLabel;
 import org.biiig.model.LabeledGraph;
+import org.gradoop.model.Labeled;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by peet on 15.07.15.
@@ -15,32 +18,66 @@ public class MTGSpanMaster {
   /**
    * minimal support of frequent subgraphs
    */
-  private final Long minSupport;
+  private final Integer minSupport;
   /**
    * worker collection
    */
   private final Collection<MTGSpanWorker> workers = new ArrayList<>();
+
+  // aggregation data sets
+
+  /**
+   * global supports of vertex labels
+   */
+  private final Map<String, Integer> vertexLabelSupports = new HashMap<>();
+  /**
+   * global supports of edge labels
+   */
+  private final Map<String, Integer> edgeLabelSupports = new HashMap<>();
+  /**
+   * global supports of DFS codes
+   */
+  private Map<DfsCode,Integer> dfsCodeSupports = new HashMap<>();
+
+  // aggregation results for broadcasting
+
   /**
    * dictionary from labeled vertex labels to GSpan vertex labels
    */
-  private final Map<String,Long> vertexLabelDictionary =
-    new HashMap<>();
+  private final ConcurrentHashMap<String,Integer> vertexLabelDictionary =
+    new ConcurrentHashMap<>();
   /**
    * dictionary from labeled edge labels to GSpan edge labels
    */
-  private Map<String, Long> edgeLabelDictionary =
-    new HashMap<>();
+  private ConcurrentHashMap<String, Integer> edgeLabelDictionary =
+    new ConcurrentHashMap<>();
   /**
-   * constructor
-   * @param minSupport minimal support of frequent subgraphs
+   * globally frequent and growable DFS codes
    */
-  public MTGSpanMaster(Long minSupport){
+  private ConcurrentSet<DfsCode> growableDfsCodes = new ConcurrentSet<>();
+  private int growableDfsCodeCount = 0;
+
+  /**
+   * memory for globally frequent DFS codes and support
+   */
+  private ConcurrentHashMap<Integer,Map<DfsCode,Integer>>
+    partitionedFrequentDfsCodeSupports =  new ConcurrentHashMap<>();
+  private Integer numberOfGraphs;
+
+  public MTGSpanMaster(Collection<LabeledGraph> graphs, Float threshold){
+
+    this.numberOfGraphs = graphs.size();
+
+    // calculate minimum support from threshold
+    Integer minSupport = Float.valueOf(numberOfGraphs * threshold).intValue();
 
     this.minSupport = minSupport;
     int numberOfWorkers = Runtime.getRuntime().availableProcessors();
 
     for(int i=0; i < numberOfWorkers; i++) {
-      this.workers.add(new MTGSpanWorker(this));
+      this.workers.add(new MTGSpanWorker(this,i));
+      this.partitionedFrequentDfsCodeSupports.put(i,new HashMap<DfsCode,
+        Integer>());
     }
   }
   /**
@@ -66,152 +103,158 @@ public class MTGSpanMaster {
     }
   }
   /**
-   * sub-workflow to generate and broadcast label dictionaries
+   * sub-workflow to mine frequent subgraphs
    */
-  public void generateFrequentLabelDictionaries() {
-    fillDictionaryFromLabelSupports(vertexLabelDictionary,
-      getVertexLabelSupports());
-    for(MTGSpanWorker worker : workers) {
-      worker.getVertexLabelDictionary().putAll(vertexLabelDictionary);
+  public void mine() {
+    //System.out.println("*** Original Graphs ***");
+    //for(MTGSpanWorker worker : workers) {
+    //  System.out.println(worker.getGraphs());
+    //}
+
+    // frequent vertex labels
+    countVertexLabels();
+    aggregateVertexLabelSupport();
+    generateVertexLabelDictionary();
+    broadcastVertexLabelDictionary();
+
+    // frequent edge labels
+    countEdgeLabels();
+    aggregateEdgeLabelSupport();
+    generateEdgeLabelDictionary();
+    broadcastEdgeLabelDictionary();
+
+    // single edge DFS codes
+
+    initializeSearchSpace();
+    aggregateDfsCodeSupports();
+    resetGrowableDfsCodes();
+
+    // grow frequent DFS codes
+
+    while (!growableDfsCodes.isEmpty()) {
+      broadcastGrowableDfsCodes();
+      growFrequentDfsCodes();
+      aggregateDfsCodeSupports();
+      resetGrowableDfsCodes();
     }
-    fillDictionaryFromLabelSupports(edgeLabelDictionary,
-      getEdgeLabelSupports());
+
+    // generate graph from frequent DFS codes
+    generateGraphsFromFreuqentDfsCodes();
+
+    //System.out.println("*** Frequent DFS codes ***");
+    //System.out.println(partitionedFrequentDfsCodeSupports);
+  }
+
+  private void countVertexLabels() {
     for(MTGSpanWorker worker : workers) {
-      worker.getEdgeLabelDictionary().putAll(edgeLabelDictionary);
+      worker.countVertexLabels();
+    }
+    joinWorkerThreads();
+  }
+
+  private void countEdgeLabels() {
+    for(MTGSpanWorker worker : workers) {
+      worker.countEdgeLabels();
+    }
+    joinWorkerThreads();
+  }
+
+  private void initializeSearchSpace() {
+    for(MTGSpanWorker worker : workers) {
+      worker.initializeSearchSpace();
+    }
+    joinWorkerThreads();
+    for(MTGSpanWorker worker : workers){
+      worker.getGraphs().clear();
     }
   }
 
-  /**
-   * sub-workflow to identify and prune infrequent edge patterns
-   */
-  public void indexFrequentEdgePatterns() {
-    Map<EdgePattern, Long> globalEdgePatternSupports = getEdgePatternSupports();
-
-    Set<EdgePattern> infrequentEdgePattern =
-      getInfrequentEdgePatterns(globalEdgePatternSupports);
+  private void aggregateVertexLabelSupport() {
+    vertexLabelSupports.clear();
 
     for(MTGSpanWorker worker : workers) {
-      worker.processInfrequentEdgePatterns(infrequentEdgePattern);
+      aggregateLabelSupports(vertexLabelSupports,
+        worker.getVertexLabelSupports());
     }
-    for(MTGSpanWorker worker : workers) {
-      try {
-        worker.getThread().join();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-
-    System.out.println(globalEdgePatternSupports);
-    System.out.println(infrequentEdgePattern);
-  }
-  /**
-   * starts vertex label count for each worker and aggregates results
-   * @return global vertex label support
-   */
-  private Map<String, Long> getVertexLabelSupports() {
-    for(MTGSpanWorker worker : workers) {
-      worker.startVertexLabelCount();
-    }
-    Map<String,Long> globalVertexLabelSupports = new HashMap<>();
-
-    for(MTGSpanWorker worker : workers) {
-      try {
-        worker.getThread().join();
-        addWorkerLabelSupports(globalVertexLabelSupports,
-          worker.getVertexLabelSupports());
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-    return globalVertexLabelSupports;
-  }
-  /**
-   * starts vertex label count for each worker and aggregates results,
-   * only considers labels of edges which vertex labels are contained
-   * in the vertex label dictionary (i.e., are considered to be frequent)
-   * @return global edge label support
-   */
-  private Map<String, Long> getEdgeLabelSupports() {
-    for(MTGSpanWorker worker : workers) {
-      worker.startEdgeLabelCount();
-    }
-    Map<String,Long> globalEdgeLabelSupports = new HashMap<>();
-
-    for(MTGSpanWorker worker : workers) {
-      try {
-        worker.getThread().join();
-        addWorkerLabelSupports(globalEdgeLabelSupports,
-          worker.getEdgeLabelSupports());
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-    return  globalEdgeLabelSupports;
   }
 
-  /**
-   * starts edge pattern count for each worker and aggregates results,
-   * only considers vertex and edge labels which are contained in the
-   * correpsponding label dictionaries (i.e., are considered to be frequent)
-   * @return global edge pattern support
-   */
-  private Map<EdgePattern, Long> getEdgePatternSupports() {
-    for(MTGSpanWorker worker : workers) {
-      worker.indexEdgePatterns();
-    }
-    Map<EdgePattern,Long> globalEdgePatternSupports = new TreeMap<>();
+  private void aggregateEdgeLabelSupport() {
+    edgeLabelSupports.clear();
 
     for(MTGSpanWorker worker : workers) {
-      try {
-        worker.getThread().join();
-
-        for(Map.Entry<EdgePattern,Long> workerEdgePatternSupport :
-          worker.getEdgePatternSupports().entrySet()) {
-
-          EdgePattern pattern = workerEdgePatternSupport.getKey();
-          Long workerSupport = workerEdgePatternSupport.getValue();
-          Long globalSupport = globalEdgePatternSupports.get(pattern);
-          globalEdgePatternSupports.put(pattern,
-            globalSupport == null ? workerSupport : globalSupport + workerSupport);
-        }
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
+      aggregateLabelSupports(edgeLabelSupports, worker.getEdgeLabelSupports());
     }
-    return globalEdgePatternSupports;
   }
   /**
    * adds worker labels supports to global label supports
    * @param globalLabelSupports global label supports
    * @param workerLabelSupports local label supports
    */
-  private void addWorkerLabelSupports(Map<String, Long> globalLabelSupports,
-    Map<String, Long> workerLabelSupports) {
-    for(Map.Entry<String,Long> workerLabelSupport :
-      workerLabelSupports.entrySet()) {
+  private void aggregateLabelSupports(Map<String, Integer> globalLabelSupports,
+    Map<String, Integer> workerLabelSupports) {
 
-      String label = workerLabelSupport.getKey();
-      Long workerSupport = workerLabelSupport.getValue();
-      Long globalSupport = globalLabelSupports.get(label);
-      globalLabelSupports.put(label,
-        globalSupport == null ? workerSupport : globalSupport + workerSupport);
+    if(globalLabelSupports.isEmpty()){
+      globalLabelSupports.putAll(workerLabelSupports);
+    } else {
+      for(Map.Entry<String,Integer> workerLabelSupport :
+        workerLabelSupports.entrySet()) {
+        String label = workerLabelSupport.getKey();
+        Integer workerSupport = workerLabelSupport.getValue();
+        Integer globalSupport = globalLabelSupports.get(label);
+        globalLabelSupports.put(label,
+          globalSupport == null ? workerSupport : globalSupport + workerSupport);
+      }
     }
     workerLabelSupports.clear();
+  }
+
+  private void aggregateDfsCodeSupports() {
+    dfsCodeSupports.clear();
+
+    // for each worker
+    for(MTGSpanWorker worker : workers) {
+
+      if(dfsCodeSupports.isEmpty()) {
+        dfsCodeSupports.putAll(worker.getDfsCodeSupports());
+      } else {
+        for(Map.Entry<DfsCode,Integer> workerDfsCodeSupport : worker
+          .getDfsCodeSupports().entrySet()){
+
+          DfsCode dfsCode = workerDfsCodeSupport.getKey();
+          Integer workerSupport = workerDfsCodeSupport.getValue();
+          Integer globalSupport = dfsCodeSupports.get(dfsCode);
+
+          dfsCodeSupports.put(dfsCode,globalSupport == null ? workerSupport :
+            globalSupport + workerSupport);
+        }
+      }
+
+      worker.getDfsCodeSupportersMap().clear();
+    }
+  }
+
+  private void generateVertexLabelDictionary() {
+    generateLabelDictionary(vertexLabelDictionary,vertexLabelSupports);
+  }
+
+  private void generateEdgeLabelDictionary() {
+    generateLabelDictionary(edgeLabelDictionary,edgeLabelSupports);
   }
   /**
    * generates dictionary entries for frequently supported labels
    * @param dictionary the dictionary to generate entries for
    * @param labelSupports map of labels and support counts
    */
-  private void fillDictionaryFromLabelSupports(
-    Map<String, Long> dictionary,
-    Map<String, Long> labelSupports) {
+  private void generateLabelDictionary(Map<String, Integer> dictionary,
+    Map<String, Integer> labelSupports) {
+
+    dictionary.clear();
 
     NavigableSet<FrequentLabel> frequentLabels = new TreeSet<>();
 
-    for(Map.Entry<String,Long> labelSupport : labelSupports.entrySet()) {
+    for(Map.Entry<String,Integer> labelSupport : labelSupports.entrySet()) {
       String label = labelSupport.getKey();
-      Long support = labelSupport.getValue();
+      Integer support = labelSupport.getValue();
 
       if(support >= minSupport){
         frequentLabels.add(
@@ -219,30 +262,77 @@ public class MTGSpanMaster {
       }
     }
 
-    Long gSpanLabel = 0l;
+    Integer gSpanLabel = 0;
     for(FrequentLabel frequentLabel : frequentLabels.descendingSet()) {
       gSpanLabel++;
       dictionary.put(frequentLabel.getLabel(),gSpanLabel);
     }
   }
 
-  /**
-   *
-   * @param globalEdgePatternSupports map of edge patterns and support counts
-   * @return set of infrequent edge patterns
-   */
-  private Set<EdgePattern> getInfrequentEdgePatterns(
-    Map<EdgePattern, Long> globalEdgePatternSupports) {
-    Set<EdgePattern> infrequentEdgePattern = new HashSet<>();
+  private void resetGrowableDfsCodes() {
+    growableDfsCodes.clear();
+    for(Map.Entry<DfsCode,Integer> dfsCodeSupport : dfsCodeSupports.entrySet
+      ()) {
 
-    for(Map.Entry<EdgePattern,Long> globalEdgePatternSupport
-      : globalEdgePatternSupports.entrySet()) {
-      if(globalEdgePatternSupport.getValue() < minSupport) {
-        infrequentEdgePattern.add(globalEdgePatternSupport.getKey());
+      DfsCode dfsCode = dfsCodeSupport.getKey();
+      Integer support = dfsCodeSupport.getValue();
+
+      if(support >= minSupport){
+        growableDfsCodes.add(dfsCode);
+        partitionedFrequentDfsCodeSupports.get(growableDfsCodeCount %
+          workers.size()).put(dfsCode, support);
+        growableDfsCodeCount++;
       }
     }
-    return infrequentEdgePattern;
   }
+
+  private void generateGraphsFromFreuqentDfsCodes() {
+    for(MTGSpanWorker worker : workers) {
+      worker.generateGraphsFromFrequentDfsCodes();
+    }
+    joinWorkerThreads();
+  }
+
+  private void broadcastVertexLabelDictionary() {
+    for(MTGSpanWorker worker : workers) {
+      worker.consumeVertexLabelDictionary();
+    }
+    joinWorkerThreads();
+  }
+
+
+  private void broadcastEdgeLabelDictionary() {
+    for(MTGSpanWorker worker : workers) {
+      worker.consumeEdgeLabelDictionary();
+    }
+    joinWorkerThreads();
+  }
+
+  private void broadcastGrowableDfsCodes() {
+    for(MTGSpanWorker worker : workers){
+      worker.consumeFrequentDfsCodes();
+    }
+    joinWorkerThreads();
+  }
+
+
+  private void joinWorkerThreads() {
+    for(MTGSpanWorker worker : workers) {
+      try {
+        worker.getThread().join();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  private void growFrequentDfsCodes() {
+    for(MTGSpanWorker worker : workers){
+      worker.growFrequentDfsCodes();
+    }
+    joinWorkerThreads();
+  }
+
   /**
    * to string method
    * @return string representation
@@ -254,15 +344,31 @@ public class MTGSpanMaster {
   /**
    * getters and setters
    */
-  public Map<String, Long> getVertexLabelDictionary() {
+  public Map<String, Integer> getVertexLabelDictionary() {
     return vertexLabelDictionary;
   }
-  public Map<String, Long> getEdgeLabelDictionary() {
+  public Map<String, Integer> getEdgeLabelDictionary() {
     return edgeLabelDictionary;
   }
+  public Collection<DfsCode> getGrowableDfsCodes() {
+    return growableDfsCodes;
+  }
 
+  public ConcurrentHashMap<Integer, Map<DfsCode, Integer>>
+  getPartitionedFrequentDfsCodeSupports() {
+    return partitionedFrequentDfsCodeSupports;
+  }
 
-  public Collection<MTGSpanWorker> getWorkers() {
-    return workers;
+  public Integer getNumberOfGraphs() {
+    return numberOfGraphs;
+  }
+
+  public void printFrequentSubgraphs() {
+    for(MTGSpanWorker worker : workers) {
+      for(Map.Entry<LabeledGraph,Float> entry : worker.getFrequentSubgraphs()
+        .entrySet()) {
+        System.out.println(entry.getValue() + "\t" + entry.getKey());
+      }
+    }
   }
 }
