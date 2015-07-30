@@ -18,13 +18,14 @@
 package org.gradoop.model.impl;
 
 import com.google.common.collect.Lists;
-import com.sun.tools.corba.se.idl.constExpr.Not;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple1;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.graph.Edge;
 import org.apache.flink.graph.Graph;
 import org.apache.flink.graph.Vertex;
@@ -46,7 +47,9 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.gradoop.model.impl.EPGraph.GRAPH_ID;
 
@@ -145,6 +148,85 @@ public class EPGraphCollection implements
   @Override
   public Long getGraphCount() throws Exception {
     return this.subgraphs.count();
+  }
+
+  @Override
+  public void addGraph(EPGraph graph) {
+    Graph<Long, EPFlinkVertexData, EPFlinkEdgeData> newGellyGraph =
+      graph.getGellyGraph();
+    if (this.graph == null) {
+      this.graph = newGellyGraph;
+    } else {
+      DataSet<Vertex<Long, EPFlinkVertexData>> vertices =
+        this.graph.getVertices().union(newGellyGraph.getVertices())
+          .distinct(new VertexKeySelector());
+      DataSet<Edge<Long, EPFlinkEdgeData>> edges =
+        this.graph.getEdges().union(newGellyGraph.getEdges())
+          .distinct(new EdgeKeySelector());
+      this.graph = Graph.fromDataSet(vertices, edges, env);
+    }
+    DataSet<Subgraph<Long, EPFlinkGraphData>> newSubgraphs = env.fromElements(
+      new Subgraph<>(graph.getId(),
+        new EPFlinkGraphData(graph.getId(), graph.getLabel(),
+          graph.getProperties())));
+    if (this.subgraphs == null) {
+      this.subgraphs = newSubgraphs;
+    } else {
+      this.subgraphs = this.subgraphs.union(newSubgraphs);
+    }
+  }
+
+  @Override
+  public void removeGraph(Long graphID) {
+    DataSet<Long> subgraphIDs = this.subgraphs
+      .map(new MapFunction<Subgraph<Long, EPFlinkGraphData>, Long>() {
+        @Override
+        public Long map(Subgraph<Long, EPFlinkGraphData> subgraph) throws
+          Exception {
+          return subgraph.getId();
+        }
+      });
+    try {
+      Set<Long> graphSet = new HashSet<>(subgraphIDs.collect());
+      boolean idWasInSet = graphSet.remove(graphID);
+      if (idWasInSet) {
+        final Set<Long> remainingGraphs = graphSet;
+        DataSet<Vertex<Long, EPFlinkVertexData>> vertices =
+          this.graph.getVertices();
+        vertices = vertices
+          .filter(new FilterFunction<Vertex<Long, EPFlinkVertexData>>() {
+              @Override
+              public boolean filter(
+                Vertex<Long, EPFlinkVertexData> vertex) throws Exception {
+                for (Long id : vertex.getValue().getGraphs()) {
+                  if (remainingGraphs.contains(id)) {
+                    return true;
+                  }
+                }
+                return false;
+              }
+            });
+
+        DataSet<Tuple3<Long, Long, Set<Long>> edges = this.graph
+          .getEdges();
+        edges = edges.filter(new FilterFunction<Edge<Long, EPFlinkEdgeData>>() {
+          @Override
+          public boolean filter(
+            Edge<Long, EPFlinkEdgeData> longEPFlinkEdgeDataEdge) throws
+            Exception {
+            for (Long id : edge.get.getValue().getGraphs()) {
+              if (remainingGraphs.contains(id)) {
+                return true;
+              }
+            }
+            return false;
+          }
+        })
+
+      }
+    } catch (Exception e) {
+    }
+
   }
 
   @Override
@@ -284,9 +366,8 @@ public class EPGraphCollection implements
       .map(new MapFunction<Subgraph<Long, EPFlinkGraphData>, EPGraphData>() {
         @Override
         public EPFlinkGraphData map(
-          Subgraph<Long, EPFlinkGraphData> longEPFlinkGraphDataSubgraph) throws
-          Exception {
-          return longEPFlinkGraphDataSubgraph.getValue();
+          Subgraph<Long, EPFlinkGraphData> subgraph) throws Exception {
+          return subgraph.getValue();
         }
       }).collect();
   }
@@ -378,6 +459,23 @@ public class EPGraphCollection implements
         }
       }
       return vertexInGraph;
+    }
+  }
+
+  private static class VertexKeySelector implements
+    KeySelector<Vertex<Long, EPFlinkVertexData>, Long> {
+    @Override
+    public Long getKey(Vertex<Long, EPFlinkVertexData> vertex) throws
+      Exception {
+      return vertex.getId();
+    }
+  }
+
+  private static class EdgeKeySelector implements
+    KeySelector<Edge<Long, EPFlinkEdgeData>, Long> {
+    @Override
+    public Long getKey(Edge<Long, EPFlinkEdgeData> edge) throws Exception {
+      return edge.getValue().getId();
     }
   }
 }

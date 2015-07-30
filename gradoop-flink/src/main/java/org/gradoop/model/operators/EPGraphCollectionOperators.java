@@ -45,6 +45,10 @@ public interface EPGraphCollectionOperators<T> extends
 
   Long getGraphCount() throws Exception;
 
+  void addGraph(EPGraph graph);
+
+  void removeGraph(Long graphID);
+
   /**
    * Filter containing graphs based on their properties.
    *
