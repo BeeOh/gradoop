@@ -25,7 +25,6 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple1;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.graph.Edge;
 import org.apache.flink.graph.Graph;
 import org.apache.flink.graph.Vertex;
@@ -177,7 +176,7 @@ public class EPGraphCollection implements
   }
 
   @Override
-  public void removeGraph(Long graphID) {
+  public void removeGraph(final Long graphID) {
     DataSet<Long> subgraphIDs = this.subgraphs
       .map(new MapFunction<Subgraph<Long, EPFlinkGraphData>, Long>() {
         @Override
@@ -195,38 +194,45 @@ public class EPGraphCollection implements
           this.graph.getVertices();
         vertices = vertices
           .filter(new FilterFunction<Vertex<Long, EPFlinkVertexData>>() {
-              @Override
-              public boolean filter(
-                Vertex<Long, EPFlinkVertexData> vertex) throws Exception {
-                for (Long id : vertex.getValue().getGraphs()) {
-                  if (remainingGraphs.contains(id)) {
-                    return true;
-                  }
+            @Override
+            public boolean filter(Vertex<Long, EPFlinkVertexData> vertex) throws
+              Exception {
+              for (Long id : vertex.getValue().getGraphs()) {
+                if (remainingGraphs.contains(id)) {
+                  return true;
                 }
-                return false;
               }
-            });
+              return false;
+            }
+          });
 
-        DataSet<Tuple3<Long, Long, Set<Long>> edges = this.graph
-          .getEdges();
+        DataSet<Edge<Long, EPFlinkEdgeData>> edges = this.graph.getEdges();
         edges = edges.filter(new FilterFunction<Edge<Long, EPFlinkEdgeData>>() {
           @Override
-          public boolean filter(
-            Edge<Long, EPFlinkEdgeData> longEPFlinkEdgeDataEdge) throws
+          public boolean filter(Edge<Long, EPFlinkEdgeData> edge) throws
             Exception {
-            for (Long id : edge.get.getValue().getGraphs()) {
+            for (Long id : edge.getValue().getGraphs()) {
               if (remainingGraphs.contains(id)) {
                 return true;
               }
             }
             return false;
           }
-        })
-
+        });
+        Graph<Long, EPFlinkVertexData, EPFlinkEdgeData> newGellyGraph =
+          Graph.fromDataSet(vertices, edges, env);
+        this.graph = newGellyGraph;
       }
     } catch (Exception e) {
     }
-
+    this.subgraphs = this.subgraphs
+      .filter(new FilterFunction<Subgraph<Long, EPFlinkGraphData>>() {
+        @Override
+        public boolean filter(Subgraph<Long, EPFlinkGraphData> subgraph) throws
+          Exception {
+          return !(subgraph.getId().equals(graphID));
+        }
+      });
   }
 
   @Override

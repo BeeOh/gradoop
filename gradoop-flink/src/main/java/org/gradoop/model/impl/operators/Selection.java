@@ -36,23 +36,13 @@ public class Selection implements UnaryCollectionToCollectionOperator {
         }
       });
 
-    EPGraphCollection resultCollection = null;
+    EPGraphCollection resultCollection = new EPGraphCollection(null, null, env);
     try {
       Set<Long> subgraphSet = new HashSet<>(subgraphIDs.collect());
       for (long id : subgraphSet) {
         EPGraph graph = collection.getGraph(id);
         if (predicate.filter(graph)) {
-          if (resultCollection == null) {
-            DataSet<Subgraph<Long, EPFlinkGraphData>> newSubgraphs = env
-              .fromElements(new Subgraph<>(id,
-                new EPFlinkGraphData(graph.getId(), graph.getLabel(),
-                  graph.getProperties())));
-            resultCollection =
-              new EPGraphCollection(graph.getGellyGraph(), newSubgraphs, env);
-          }
-          else{
-
-          }
+          resultCollection.addGraph(graph);
         }
       }
     } catch (Exception e) {
