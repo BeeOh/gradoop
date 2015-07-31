@@ -24,7 +24,7 @@ public class Main {
     // create a resource config that scans for JAX-RS resources and providers
     // in com.example package
     final ResourceConfig rc =
-      new ResourceConfig().packages("org.gradoop" + ".model.rest.example");
+      new ResourceConfig().packages("org.gradoop" + ".model.rest");
 
     // create and start a new instance of grizzly http server
     // exposing the Jersey application at BASE_URI
