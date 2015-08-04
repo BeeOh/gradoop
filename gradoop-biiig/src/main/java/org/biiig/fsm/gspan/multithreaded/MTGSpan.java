@@ -29,8 +29,9 @@ public class MTGSpan {
     // generate dictionaries for frequent vertex and edge labels
     master.mine();
 
+    master.printfrequentDfsCodes();
     master.printFrequentSubgraphs();
 
-    return new HashMap<>();
+    return master.getFrequentSubgraphs();
   }
 }

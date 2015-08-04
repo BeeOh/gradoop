@@ -71,12 +71,11 @@ public class DfsCode implements Comparable<DfsCode>, Cloneable {
     int lastFromPosition = lastEdge.getFromPosition();
     rightmostTailPositions.add(lastFromPosition);
 
-    while (lastFromPosition > 0) {
-      for(DfsEdge edge : edges) {
-        if (edge.getToPosition() == lastFromPosition){
-          lastFromPosition = edge.getFromPosition();
-          rightmostTailPositions.add(lastFromPosition);
-        }
+    for(int index = edges.size()-2; index >= 0; index--) {
+      DfsEdge edge = edges.get(index);
+      if (edge.getToPosition() == lastFromPosition){
+        lastFromPosition = edge.getFromPosition();
+        rightmostTailPositions.add(lastFromPosition);
       }
     }
 
@@ -110,5 +109,9 @@ public class DfsCode implements Comparable<DfsCode>, Cloneable {
     }
 
     return equals;
+  }
+
+  public int getRightmostVertexPosition() {
+    return edges.get(edges.size() - 1).getToPosition();
   }
 }

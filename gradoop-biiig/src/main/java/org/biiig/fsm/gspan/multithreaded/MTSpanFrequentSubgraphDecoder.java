@@ -11,8 +11,8 @@ import java.util.Map;
 /**
  * Created by peet on 29.07.15.
  */
-public class MTSpanFrequentSubgraphGenerator extends MTGSpanRunnable {
-  public MTSpanFrequentSubgraphGenerator(MTGSpanWorker worker) {
+public class MTSpanFrequentSubgraphDecoder extends MTGSpanRunnable {
+  public MTSpanFrequentSubgraphDecoder(MTGSpanWorker worker) {
     super(worker);
   }
 

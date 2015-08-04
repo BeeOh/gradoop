@@ -20,7 +20,7 @@ public class FrequentLabel implements Comparable<FrequentLabel> {
 
     if (comparison == 0) {
 
-      comparison = this.label.compareTo(other.label);
+      comparison = this.label.compareTo(other.label)*-1;
 
       if (comparison == 0) {
         comparison = this.hashCode() - other.hashCode();

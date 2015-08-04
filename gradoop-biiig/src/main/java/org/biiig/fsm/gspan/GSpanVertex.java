@@ -18,7 +18,7 @@ public class GSpanVertex implements Comparable<GSpanVertex> {
 
   @Override
   public String toString(){
-    return "(" + label + ")";
+    return "(" + label + ":" + hashCode() + ")";
   }
 
   public Integer getLabel() {

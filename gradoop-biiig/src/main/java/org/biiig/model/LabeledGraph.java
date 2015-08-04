@@ -1,5 +1,6 @@
 package org.biiig.model;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -7,7 +8,7 @@ import java.util.*;
 /**
  * Created by peet on 25.06.15.
  */
-public class LabeledGraph {
+public class LabeledGraph implements Comparable<LabeledGraph> {
 
   private final List<LabeledVertex> vertices = new ArrayList<>();
   private final List<LabeledEdge> edges = new ArrayList<>();
@@ -74,5 +75,52 @@ public class LabeledGraph {
     vertexIncomingEdges.remove(vertex);
     vertexOutgoingEdges.remove(vertex);
     vertices.remove(vertex);
+  }
+
+  @Override
+  public int compareTo(LabeledGraph other) {
+    int comparison = this.vertices.size() - other.vertices.size();
+
+    if(comparison == 0) {
+      comparison = this.edges.size() - other.edges.size();
+
+      if(comparison == 0) {
+        // compare vertex sets
+        List<LabeledVertex> ownVertices = Lists.newArrayList(this.vertices);
+        List<LabeledVertex> otherVertices = Lists.newArrayList(other.vertices);
+
+        Collections.sort(ownVertices);
+        Collections.sort(otherVertices);
+
+        Iterator<LabeledVertex> ownVertexIterator = ownVertices.iterator();
+        Iterator<LabeledVertex> otherVertexIterator = otherVertices.iterator();
+
+        while(comparison == 0 && ownVertexIterator.hasNext()) {
+          comparison = ownVertexIterator.next().compareTo(
+            otherVertexIterator.next());
+        }
+
+        if(comparison == 0) {
+          // compare edge sets
+          List<LabeledEdge> ownEdges = Lists.newArrayList(this.edges);
+          List<LabeledEdge> otherEdges = Lists.newArrayList(other.edges);
+
+          Collections.sort(ownEdges);
+          Collections.sort(otherEdges);
+
+          Iterator<LabeledEdge> ownEdgeIterator = ownEdges.iterator();
+          Iterator<LabeledEdge> otherEdgeIterator = otherEdges.iterator();
+
+          while(comparison == 0 && ownEdgeIterator.hasNext()) {
+            comparison = ownEdgeIterator.next().compareTo(
+              otherEdgeIterator.next());
+          }
+        }
+
+        // TODO : isomorphism check if invariant comparison results to 0
+      }
+    }
+
+    return comparison;
   }
 }

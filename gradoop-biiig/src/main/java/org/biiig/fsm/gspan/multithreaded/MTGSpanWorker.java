@@ -131,7 +131,7 @@ public class MTGSpanWorker {
   }
 
   public void generateGraphsFromFrequentDfsCodes() {
-    thread = new Thread(new MTSpanFrequentSubgraphGenerator(this));
+    thread = new Thread(new MTSpanFrequentSubgraphDecoder(this));
     thread.start();
   }
 

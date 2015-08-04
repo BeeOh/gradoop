@@ -45,12 +45,42 @@ public class DfsCodeMapper implements Cloneable{
   }
 
   public boolean isValidForGrowth(GSpanEdge edge) {
+    //System.out.println(edge + " ? " + edges);
+
     // not already mapped and lexicographically greater or equal
-    return !edges.contains(edge) && edge.compareTo(edges.get(0)) >= 0;
+    return !contains(edge) && edge.compareTo(edges.get(0)) >= 0;
   }
 
   public boolean contains(GSpanVertex vertex) {
-    return vertices.contains(vertex);
+
+    boolean contains = false;
+
+    for (GSpanVertex mappedVertex : vertices) {
+      if(vertex == mappedVertex) {
+        contains = true;
+        break;
+      }
+    }
+
+    return contains;
+
+    //return vertices.contains(vertex);
+  }
+
+  public boolean contains(GSpanEdge edge) {
+
+    boolean contains = false;
+
+    for (GSpanEdge mappedEdge : edges) {
+      if(edge == mappedEdge) {
+        contains = true;
+        break;
+      }
+    }
+
+    return contains;
+
+    //return vertices.contains(vertex);
   }
 
   public GSpanVertex getVertex(Integer position) {

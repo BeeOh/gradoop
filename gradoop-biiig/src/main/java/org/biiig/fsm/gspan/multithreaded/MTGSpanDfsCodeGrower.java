@@ -1,5 +1,6 @@
 package org.biiig.fsm.gspan.multithreaded;
 
+import org.apache.commons.lang3.StringUtils;
 import org.biiig.fsm.gspan.DfsCode;
 import org.biiig.fsm.gspan.DfsCodeMapper;
 import org.biiig.fsm.gspan.DfsEdge;
@@ -62,123 +63,133 @@ public class MTGSpanDfsCodeGrower extends MTGSpanRunnable {
 
       DfsCode parentDfsCode = dfsCodeMappers.getKey();
 
+
       // for each mapper grow new DFS codes
       for(DfsCodeMapper parentMapper : dfsCodeMappers.getValue()) {
-
         GSpanGraph graph = parentMapper.getGraph();
         GSpanVertex rightmostVertex = parentMapper.getRightmostVertex();
         Integer rightmostPosition = parentMapper.getRightmostVertexPosition();
 
-        // backward edges from rightmost vertex to key (position)
-        Collection<GSpanEdge> backwardEdges = new ArrayList<>();
-        // forward edges from key (position)
-        Collection<GSpanEdge> forwardEdges = new ArrayList<>();
+        // backward edges from rightmost vertex to value vertex
+        Map<GSpanEdge,GSpanVertex> backwardEdges = new HashMap<>();
+        // forward edges from value vertex to other vertex
+        Map<GSpanEdge,GSpanVertex> forwardEdges = new HashMap<>();
 
-        // growth edges from rightmost vertex
+        // all growth edges from rightmost vertex
         for(GSpanEdge edge : graph.getAdjacencyList(rightmostVertex)) {
           if(parentMapper.isValidForGrowth(edge)) {
 
-            if(parentMapper.contains(edge.getOtherVertex(rightmostVertex))) {
-              backwardEdges.add(edge);
+            GSpanVertex otherVertex = edge.getOtherVertex(rightmostVertex);
+
+            // backward edge
+            if(parentMapper.contains(otherVertex)) {
+              backwardEdges.put(edge,otherVertex);
+              // forward edge
             } else {
-              forwardEdges.add(edge);
+              forwardEdges.put(edge,rightmostVertex);
             }
           }
         }
 
-        // growth edges from rightmost tail
+        // forward growth edges from rightmost tail
         for(Integer position : parentDfsCode.getRightmostTailPositions()) {
           GSpanVertex vertex = parentMapper.getVertex(position);
 
           for(GSpanEdge edge : graph.getAdjacencyList(vertex)) {
-            if(!backwardEdges.contains(edge) && parentMapper.isValidForGrowth(edge)) {
-              forwardEdges.add(edge);
+            if(parentMapper.isValidForGrowth(edge) && !parentMapper.contains
+              (edge.getOtherVertex(vertex))) {
+              forwardEdges.put(edge, vertex);
             }
           }
         }
 
-        Collection<GSpanEdge> growthEdges = backwardEdges;
-        growthEdges.addAll(forwardEdges);
 
-        // generate new DFS codes for all growth edges
+        // generate new DFS codes for backward edges
 
-        for(GSpanEdge edge : growthEdges) {
-          Integer sourcePosition = parentMapper.positionOf(edge.getSourceVertex());
-          Integer targetPosition = parentMapper.positionOf(edge.getTargetVertex());
+        for(Map.Entry<GSpanEdge,GSpanVertex> backwardEdge
+          : backwardEdges.entrySet()) {
 
-          Integer fromPosition;
-          GSpanVertex fromVertex;
-          Integer toPosition;
-          GSpanVertex toVertex;
-          boolean outgoing;
+          GSpanEdge edge = backwardEdge.getKey();
+          GSpanVertex fromVertex = rightmostVertex;
+          GSpanVertex toVertex = backwardEdge.getValue();
 
-          // backward edge
-          if(sourcePosition > 0 && targetPosition > 0){
-            // rightmost vertex is source
-            if(sourcePosition > targetPosition) {
-              fromPosition = rightmostPosition;
-              fromVertex = rightmostVertex;
-              toPosition = targetPosition;
-              toVertex = parentMapper.getVertex(targetPosition);
-              outgoing = true;
+          Integer fromPosition = rightmostPosition;
+          Integer toPosition = parentMapper.positionOf(toVertex);
 
-              // rightmost vertex is target
-            } else {
-              fromPosition = sourcePosition;
-              fromVertex = parentMapper.getVertex(sourcePosition);
-              toPosition = rightmostPosition;
-              toVertex = rightmostVertex;
-              outgoing = false;
-            }
-            // forward edge in direction
-          } else {
-            if(sourcePosition > 0) {
-              fromPosition = sourcePosition;
-              fromVertex = parentMapper.getVertex(sourcePosition);
-              toVertex = edge.getTargetVertex();
-              outgoing = true;
+          DfsCode childDfsCode = growDfsCode(parentDfsCode, edge, fromVertex,
+            fromPosition, toVertex, toPosition);
 
-              // forward edge inverse direction
-            } else {
-              fromPosition = targetPosition;
-              fromVertex = parentMapper.getVertex(targetPosition);
-              toVertex = edge.getSourceVertex();
-              outgoing = false;
-            }
-            toPosition = rightmostPosition + 1;
-            parentMapper.add(toVertex);
-          }
+          DfsCodeMapper childMapper = growDfsCodeMapper(parentMapper, edge);
 
-          DfsEdge dfsEdge = new DfsEdge(fromPosition,toPosition,fromVertex
-            .getLabel(),outgoing,edge.getLabel(),toVertex.getLabel());
+          addMapper(childDfsCode, childMapper);
+          addSupporter(childDfsCode, graph);
+        }
 
-          DfsCode childDfsCode = parentDfsCode.clone();
-          childDfsCode.add(dfsEdge);
-          DfsCodeMapper childMapper = parentMapper.clone();
-          childMapper.add(edge);
+        for(Map.Entry<GSpanEdge,GSpanVertex> forwardEdge
+          : forwardEdges.entrySet()) {
 
-          // add mapper to existing DFS codes or create new entry
-          Collection<DfsCodeMapper> mappers =
-            worker.getDfsCodeMappersMap().get(childDfsCode);
+          GSpanEdge edge = forwardEdge.getKey();
+          GSpanVertex fromVertex = forwardEdge.getValue();
+          GSpanVertex toVertex = edge.getOtherVertex(fromVertex);
 
-          if (mappers == null) {
-            mappers = new ArrayList<>();
-            worker.getDfsCodeMappersMap().put(childDfsCode,mappers);
-          }
+          Integer fromPosition = parentMapper.positionOf(fromVertex);
+          Integer toPosition = rightmostPosition + 1;
 
-          // add graph to existing DFS codes or create new entry
-          Set<GSpanGraph> supporters =
-            worker.getDfsCodeSupportersMap().get(childDfsCode);
+          DfsCode childDfsCode = growDfsCode(parentDfsCode, edge, fromVertex,
+            fromPosition, toVertex, toPosition);
 
-          if (supporters == null) {
-            supporters = new HashSet<>();
-            worker.getDfsCodeSupportersMap().put(childDfsCode,supporters);
-          }
+          DfsCodeMapper childMapper = growDfsCodeMapper(parentMapper, edge);
+          childMapper.add(toVertex);
 
-          mappers.add(childMapper);
-          supporters.add(graph);
+          addMapper(childDfsCode, childMapper);
+          addSupporter(childDfsCode, graph);
         }
       }
     }
+  }
+
+  private DfsCodeMapper growDfsCodeMapper(DfsCodeMapper parentMapper,
+    GSpanEdge edge) {
+
+    DfsCodeMapper childMapper = parentMapper.clone();
+    childMapper.add(edge);
+    return childMapper;
+  }
+
+  private DfsCode growDfsCode(DfsCode parentDfsCode, GSpanEdge edge,
+    GSpanVertex fromVertex, Integer fromPosition, GSpanVertex toVertex,
+    Integer toPosition) {
+
+    Boolean outgoing = edge.getSourceVertex() == fromVertex;
+
+    DfsEdge dfsEdge = new DfsEdge(fromPosition,toPosition,fromVertex
+      .getLabel(),outgoing,edge.getLabel(),toVertex.getLabel());
+
+    DfsCode childDfsCode = parentDfsCode.clone();
+    childDfsCode.add(dfsEdge);
+
+    return childDfsCode;
+  }
+
+  private void addMapper(DfsCode dfsCode, DfsCodeMapper dfsCodeMapper) {
+    Collection<DfsCodeMapper> mappers =
+      worker.getDfsCodeMappersMap().get(dfsCode);
+
+    if (mappers == null) {
+      mappers = new ArrayList<>();
+      worker.getDfsCodeMappersMap().put(dfsCode,mappers);
+    } mappers.add(dfsCodeMapper);
+  }
+
+  private void addSupporter(DfsCode dfsCode, GSpanGraph graph) {
+    Set<GSpanGraph> supporters =
+      worker.getDfsCodeSupportersMap().get(dfsCode);
+
+    if (supporters == null) {
+      supporters = new HashSet<>();
+      worker.getDfsCodeSupportersMap().put(dfsCode,supporters);
+    }
+
+    supporters.add(graph);
   }
 }

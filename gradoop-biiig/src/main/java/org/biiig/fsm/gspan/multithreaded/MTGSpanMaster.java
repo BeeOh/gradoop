@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.biiig.fsm.gspan.DfsCode;
 import org.biiig.fsm.gspan.common.FrequentLabel;
 import org.biiig.model.LabeledGraph;
-import org.gradoop.model.Labeled;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,6 +37,8 @@ public class MTGSpanMaster {
    * global supports of DFS codes
    */
   private Map<DfsCode,Integer> dfsCodeSupports = new HashMap<>();
+
+  private Map<LabeledGraph, Float> frequentSubgraphs = new HashMap<>();
 
   // aggregation results for broadcasting
 
@@ -106,22 +107,21 @@ public class MTGSpanMaster {
    * sub-workflow to mine frequent subgraphs
    */
   public void mine() {
-    //System.out.println("*** Original Graphs ***");
-    //for(MTGSpanWorker worker : workers) {
-    //  System.out.println(worker.getGraphs());
-    //}
-
     // frequent vertex labels
     countVertexLabels();
     aggregateVertexLabelSupport();
     generateVertexLabelDictionary();
     broadcastVertexLabelDictionary();
 
+    System.out.println(vertexLabelDictionary);
+
     // frequent edge labels
     countEdgeLabels();
     aggregateEdgeLabelSupport();
     generateEdgeLabelDictionary();
     broadcastEdgeLabelDictionary();
+
+    System.out.println(edgeLabelDictionary);
 
     // single edge DFS codes
 
@@ -140,9 +140,13 @@ public class MTGSpanMaster {
 
     // generate graph from frequent DFS codes
     generateGraphsFromFreuqentDfsCodes();
+    collecectFrequentSubgraphs();
+  }
 
-    //System.out.println("*** Frequent DFS codes ***");
-    //System.out.println(partitionedFrequentDfsCodeSupports);
+  private void collecectFrequentSubgraphs() {
+    for(MTGSpanWorker worker : workers) {
+      frequentSubgraphs.putAll(worker.getFrequentSubgraphs());
+    }
   }
 
   private void countVertexLabels() {
@@ -367,6 +371,20 @@ public class MTGSpanMaster {
     for(MTGSpanWorker worker : workers) {
       for(Map.Entry<LabeledGraph,Float> entry : worker.getFrequentSubgraphs()
         .entrySet()) {
+        System.out.println(entry.getValue() + "\t" + entry.getKey());
+      }
+    }
+  }
+
+  public Map<LabeledGraph, Float> getFrequentSubgraphs() {
+    return frequentSubgraphs;
+  }
+
+  public void printfrequentDfsCodes() {
+    for(Map<DfsCode,Integer> frequentDfsCodeSupports :
+      partitionedFrequentDfsCodeSupports
+      .values()) {
+      for(Map.Entry<DfsCode,Integer> entry : frequentDfsCodeSupports.entrySet()) {
         System.out.println(entry.getValue() + "\t" + entry.getKey());
       }
     }

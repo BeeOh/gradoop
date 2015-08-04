@@ -33,7 +33,8 @@ public class GSpanEdge implements Comparable<GSpanEdge> {
 
   @Override
   public String toString(){
-    return sourceVertex.toString() + "-" + this.label + "->" + targetVertex.toString();
+    return sourceVertex.toString() + "-" + this.label + "->" + targetVertex
+      .toString();
   }
 
   public Integer getLabel() {
@@ -50,5 +51,9 @@ public class GSpanEdge implements Comparable<GSpanEdge> {
 
   public GSpanVertex getTargetVertex() {
     return targetVertex;
+  }
+
+  public boolean contains(GSpanVertex rightmostVertex) {
+    return sourceVertex == rightmostVertex || targetVertex == rightmostVertex;
   }
 }
