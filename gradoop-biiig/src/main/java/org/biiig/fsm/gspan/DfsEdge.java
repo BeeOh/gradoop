@@ -200,4 +200,8 @@ public class DfsEdge implements Comparable<DfsEdge> {
   public Integer getToLabel() {
     return toLabel;
   }
+
+  public boolean contains(Integer position) {
+    return fromPosition == position || toPosition == position;
+  }
 }

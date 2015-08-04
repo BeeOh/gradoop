@@ -12,17 +12,15 @@ public class LabeledGraph implements Comparable<LabeledGraph> {
 
   private final List<LabeledVertex> vertices = new ArrayList<>();
   private final List<LabeledEdge> edges = new ArrayList<>();
-  private final Map<LabeledVertex,List<LabeledEdge>>
-    vertexOutgoingEdges = new HashMap<>();
-  private final Map<LabeledVertex,List<LabeledEdge>>
-    vertexIncomingEdges = new HashMap<>();
+  private final Map<LabeledVertex,List<LabeledEdge>> vertexOutgoingEdgesMap = new HashMap<>();
+  private final Map<LabeledVertex,List<LabeledEdge>> vertexIncomingEdgesMap = new HashMap<>();
 
 
   public LabeledVertex newVertex(String label) {
     LabeledVertex vertex = new LabeledVertex(label);
     this.vertices.add(vertex);
-    vertexOutgoingEdges.put(vertex,new ArrayList<LabeledEdge>());
-    vertexIncomingEdges.put(vertex,new ArrayList<LabeledEdge>());
+    vertexOutgoingEdgesMap.put(vertex, new ArrayList<LabeledEdge>());
+    vertexIncomingEdgesMap.put(vertex, new ArrayList<LabeledEdge>());
     return vertex;
   }
 
@@ -30,8 +28,8 @@ public class LabeledGraph implements Comparable<LabeledGraph> {
     LabeledVertex targetVertex) {
     LabeledEdge edge = new LabeledEdge(sourceVertex,label,targetVertex);
     this.edges.add(edge);
-    vertexOutgoingEdges.get(sourceVertex).add(edge);
-    vertexIncomingEdges.get(targetVertex).add(edge);
+    vertexOutgoingEdgesMap.get(sourceVertex).add(edge);
+    vertexIncomingEdgesMap.get(targetVertex).add(edge);
     return edge;
   }
 
@@ -66,19 +64,21 @@ public class LabeledGraph implements Comparable<LabeledGraph> {
 
   public List<LabeledEdge> getEdges(LabeledVertex vertex) {
     List<LabeledEdge> vertexEdges = new LinkedList<>();
-    vertexEdges.addAll(vertexOutgoingEdges.get(vertex));
-    vertexEdges.addAll(vertexIncomingEdges.get(vertex));
+    vertexEdges.addAll(vertexOutgoingEdgesMap.get(vertex));
+    vertexEdges.addAll(vertexIncomingEdgesMap.get(vertex));
     return vertexEdges;
   }
 
   public void remove(LabeledVertex vertex) {
-    vertexIncomingEdges.remove(vertex);
-    vertexOutgoingEdges.remove(vertex);
+    vertexIncomingEdgesMap.remove(vertex);
+    vertexOutgoingEdgesMap.remove(vertex);
     vertices.remove(vertex);
   }
 
   @Override
   public int compareTo(LabeledGraph other) {
+    // compares invariants only
+
     int comparison = this.vertices.size() - other.vertices.size();
 
     if(comparison == 0) {
@@ -116,11 +116,97 @@ public class LabeledGraph implements Comparable<LabeledGraph> {
               otherEdgeIterator.next());
           }
         }
-
-        // TODO : isomorphism check if invariant comparison results to 0
       }
     }
 
     return comparison;
   }
+
+  public boolean isIsomorphicTo(LabeledGraph other) {
+
+    boolean isIsomorphic = false;
+
+    if(this.compareTo(other) == 0) {
+      isIsomorphic = this.getAdjacencyMatrixCode().compareTo(
+        other.getAdjacencyMatrixCode()) == 0;
+    }
+
+    return isIsomorphic;
+  }
+
+  public String getAdjacencyMatrixCode() {
+    List<String> vertexCodes = new ArrayList<>();
+
+    // for each vertex
+    for(LabeledVertex vertex : vertices) {
+
+      // encode outgoing edges
+      Map<LabeledVertex,List<String>> targetVertexEdgeLabels = new HashMap<>();
+
+      for(LabeledEdge edge : vertexOutgoingEdgesMap.get(vertex)) {
+
+        LabeledVertex targetVertex = edge.getTargetVertex();
+        List<String> edgeLabels = targetVertexEdgeLabels.get(targetVertex);
+
+        if(edgeLabels == null) {
+          edgeLabels = new ArrayList<>();
+          targetVertexEdgeLabels.put(targetVertex, edgeLabels);
+        }
+
+        edgeLabels.add(edge.getLabel());
+      }
+
+      String outgoingEdgesCode = getVertexConnectionsCode(
+        targetVertexEdgeLabels);
+
+      // encode incoming edges
+      Map<LabeledVertex,List<String>> sourceVertexEdgeLabels = new HashMap<>();
+
+      for(LabeledEdge edge : vertexIncomingEdgesMap.get(vertex)) {
+
+        LabeledVertex sourceVertex = edge.getSourceVertex();
+        List<String> edgeLabels = sourceVertexEdgeLabels.get(sourceVertex);
+
+        if(edgeLabels == null) {
+          edgeLabels = new ArrayList<>();
+          sourceVertexEdgeLabels.put(sourceVertex, edgeLabels);
+        }
+
+        edgeLabels.add(edge.getLabel());
+      }
+
+      String incomingEdgesCode = getVertexConnectionsCode
+        (sourceVertexEdgeLabels);
+
+      vertexCodes.add(vertex.getLabel() + "(" + outgoingEdgesCode + "," +
+        incomingEdgesCode + ")" );
+    }
+
+    Collections.sort(vertexCodes);
+
+    return StringUtils.join(vertexCodes,",");
+  }
+
+  private String getVertexConnectionsCode(
+    Map<LabeledVertex, List<String>> vertexEdgeLabelsMap) {
+    List<String> vertexConnectionCodes = new ArrayList<>();
+
+    for(Map.Entry<LabeledVertex,List<String>> vertexEdgeLabels :
+      vertexEdgeLabelsMap.entrySet()) {
+
+      String vertexLabel = vertexEdgeLabels.getKey().getLabel();
+      List<String> edgeLabels = vertexEdgeLabels.getValue();
+      Collections.sort(edgeLabels);
+
+      // vertexLabel(edgeLabelA,..,edgeLabelZ)
+      vertexConnectionCodes.add(
+        vertexLabel + "(" + StringUtils.join(edgeLabels, ",") + ")");
+    }
+
+    Collections.sort(vertexConnectionCodes);
+
+    return "(" + StringUtils.join(vertexConnectionCodes,",") + ")";
+  }
+
+
 }

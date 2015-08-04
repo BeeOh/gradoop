@@ -1,6 +1,5 @@
 package org.biiig.fsm.gspan.multithreaded;
 
-import org.apache.commons.lang3.StringUtils;
 import org.biiig.fsm.gspan.DfsCode;
 import org.biiig.fsm.gspan.DfsCodeMapper;
 import org.biiig.fsm.gspan.DfsEdge;
@@ -83,7 +82,9 @@ public class MTGSpanDfsCodeGrower extends MTGSpanRunnable {
 
             // backward edge
             if(parentMapper.contains(otherVertex)) {
-              backwardEdges.put(edge,otherVertex);
+              if(parentMapper.growsBackwardToMinimalCodeBy(edge, otherVertex)){
+                backwardEdges.put(edge,otherVertex);
+              }
               // forward edge
             } else {
               forwardEdges.put(edge,rightmostVertex);
@@ -116,8 +117,13 @@ public class MTGSpanDfsCodeGrower extends MTGSpanRunnable {
           Integer fromPosition = rightmostPosition;
           Integer toPosition = parentMapper.positionOf(toVertex);
 
-          DfsCode childDfsCode = growDfsCode(parentDfsCode, edge, fromVertex,
-            fromPosition, toVertex, toPosition);
+          Boolean outgoing = edge.getSourceVertex() == fromVertex;
+
+          DfsEdge dfsEdge = new DfsEdge(fromPosition,toPosition,fromVertex
+            .getLabel(),outgoing,edge.getLabel(),toVertex.getLabel());
+
+          DfsCode childDfsCode = parentDfsCode.clone();
+          childDfsCode.add(dfsEdge);
 
           DfsCodeMapper childMapper = growDfsCodeMapper(parentMapper, edge);
 
@@ -135,8 +141,13 @@ public class MTGSpanDfsCodeGrower extends MTGSpanRunnable {
           Integer fromPosition = parentMapper.positionOf(fromVertex);
           Integer toPosition = rightmostPosition + 1;
 
-          DfsCode childDfsCode = growDfsCode(parentDfsCode, edge, fromVertex,
-            fromPosition, toVertex, toPosition);
+          Boolean outgoing = edge.getSourceVertex() == fromVertex;
+
+          DfsEdge dfsEdge = new DfsEdge(fromPosition,toPosition,fromVertex
+            .getLabel(),outgoing,edge.getLabel(),toVertex.getLabel());
+
+          DfsCode childDfsCode = parentDfsCode.clone();
+          childDfsCode.add(dfsEdge);
 
           DfsCodeMapper childMapper = growDfsCodeMapper(parentMapper, edge);
           childMapper.add(toVertex);
@@ -154,21 +165,6 @@ public class MTGSpanDfsCodeGrower extends MTGSpanRunnable {
     DfsCodeMapper childMapper = parentMapper.clone();
     childMapper.add(edge);
     return childMapper;
-  }
-
-  private DfsCode growDfsCode(DfsCode parentDfsCode, GSpanEdge edge,
-    GSpanVertex fromVertex, Integer fromPosition, GSpanVertex toVertex,
-    Integer toPosition) {
-
-    Boolean outgoing = edge.getSourceVertex() == fromVertex;
-
-    DfsEdge dfsEdge = new DfsEdge(fromPosition,toPosition,fromVertex
-      .getLabel(),outgoing,edge.getLabel(),toVertex.getLabel());
-
-    DfsCode childDfsCode = parentDfsCode.clone();
-    childDfsCode.add(dfsEdge);
-
-    return childDfsCode;
   }
 
   private void addMapper(DfsCode dfsCode, DfsCodeMapper dfsCodeMapper) {

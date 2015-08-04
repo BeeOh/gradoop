@@ -4,18 +4,28 @@ package org.biiig.fsm.gspan;
 import org.biiig.fsm.gspan.multithreaded.MTGSpan;
 import org.biiig.model.LabeledGraph;
 import org.biiig.model.LabeledVertex;
-import org.gradoop.model.Labeled;
+import org.hamcrest.core.Is;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 public class MTGSpanTest {
 
   @Test
   public void testWithoutCyclesLoopsAndParallelEdges() {
 
+    System.out.println("*** Test GSpan without cycles, loops and parallel " +
+      "edges ***");
+
+    // search space
     List<LabeledGraph> graphs = new ArrayList<>();
 
     // (Z)-z->(X)<-a-(A)
@@ -64,81 +74,162 @@ public class MTGSpanTest {
     gC.newEdge(gCvZ,"z",gCvX);
     gC.newEdge(gCvA,"a",gCvX);
 
+    // expected result
+    Set<LabeledGraph> expectedSubgraphs = new HashSet<>();
 
-    // (A)-a->(X) => (0:A)-a->(1:X)
-    // (X)<-y-(Y) => (0:Y)-y->(1:X)
-    // (X)<-z-(Z) => (0:Z)-z->(1:X)
-    // (A)-a->(X)<-z-(Z) => (0:A)-a->(1:X),(2:Z)-z->(1:X)
-    // (Y)-y->(X)<-z-(Z) => (1:Y)-y->(0:X),(2:Z)-z->(0:X)
+    // sA : (A)-a->(X)
+    LabeledGraph sA = new LabeledGraph();
+    expectedSubgraphs.add(sA);
+    sA.newEdge(sA.newVertex("A"),"a",sA.newVertex("X"));
 
+    // sB : (Y)-y->(X)
+    LabeledGraph sB = new LabeledGraph();
+    expectedSubgraphs.add(sB);
+    sB.newEdge(sB.newVertex("Y"),"y",sB.newVertex("X"));
+
+    // sC : (Z)-z->(X)
+    LabeledGraph sC = new LabeledGraph();
+    expectedSubgraphs.add(sC);
+    sC.newEdge(sC.newVertex("Z"),"z",sC.newVertex("X"));
+
+    // sD : (A)-a->(X)<-z-(Z)
+    LabeledGraph sD = new LabeledGraph();
+    expectedSubgraphs.add(sD);
+    LabeledVertex sDvX = sD.newVertex("X");
+    sD.newEdge(sD.newVertex("A"),"a",sDvX);
+    sD.newEdge(sD.newVertex("Z"),"z",sDvX);
+
+    // sE : (Y)-y->(X)<-z-(Z)
+    LabeledGraph sE = new LabeledGraph();
+    expectedSubgraphs.add(sE);
+    LabeledVertex sEvX = sE.newVertex("X");
+    sE.newEdge(sE.newVertex("Y"),"y",sEvX);
+    sE.newEdge(sE.newVertex("Z"),"z",sEvX);
+
+    // FSM
     MTGSpan gSpan = new MTGSpan();
     Map<LabeledGraph,Float> frequentSubgraphs =
       gSpan.frequentSubgraphs(graphs, 0.7f);
 
+    checkAssertions(frequentSubgraphs, expectedSubgraphs);
   }
 
-  public void testMinimalEdgePruning(){
-    MTGSpan gSpan = new MTGSpan();
+  @Test
+  public void testCycles(){
+    System.out.println("\n*** Test GSpan with cycles ***");
 
+    // search space
     List<LabeledGraph> graphs = new ArrayList<>();
 
-
-    // (A)-a->(A)-b->(B)<-c-(B)-dL
-    //           -e->
+    //   <-a-(B)-a->
+    // (A)  <-a-   (A)
 
     LabeledGraph gA = new LabeledGraph();
     graphs.add(gA);
-
     LabeledVertex gAvA1 = gA.newVertex("A");
+    LabeledVertex gAvB = gA.newVertex("B");
     LabeledVertex gAvA2 = gA.newVertex("A");
-    gA.newEdge(gAvA1,"a",gAvA2);
-    LabeledVertex gAvB1 = gA.newVertex("B");
-    gA.newEdge(gAvA2,"b",gAvB1);
-    gA.newEdge(gAvA2,"e",gAvB1);
-    LabeledVertex gAvB2 = gA.newVertex("B");
-    gA.newEdge(gAvB2,"c",gAvB1);
-    gA.newEdge(gAvB2,"d",gAvB2);
+    gA.newEdge(gAvB,"a",gAvA1);
+    gA.newEdge(gAvB,"a",gAvA2);
+    gA.newEdge(gAvA2,"a",gAvA1);
 
-
-
-    // (A)-b->(A)-b->(B)<-c-(B)
-    //           -e->
-
+    //   -a->(A)<-a-
+    // (A)  <-a-   (B)
 
     LabeledGraph gB = new LabeledGraph();
     graphs.add(gB);
-
     LabeledVertex gBvA1 = gB.newVertex("A");
     LabeledVertex gBvA2 = gB.newVertex("A");
-    gB.newEdge(gBvA1,"b",gBvA2);
-    LabeledVertex gBvB1 = gB.newVertex("B");
-    gB.newEdge(gBvA2,"b",gBvB1);
-    gB.newEdge(gBvA2,"e",gBvB1);
-    LabeledVertex gBvB2 = gB.newVertex("B");
-    gB.newEdge(gBvB2,"c",gBvB1);
+    LabeledVertex gBvB = gB.newVertex("B");
+    gB.newEdge(gBvA1,"a",gBvA2);
+    gB.newEdge(gBvB,"a",gBvA1);
+    gB.newEdge(gBvB,"a",gBvA2);
+
+    // expected result
+    Set<LabeledGraph> expectedSubgraphs = new HashSet<>();
+
+    // sBA : (B)-a->(A)
+    LabeledGraph sBA = new LabeledGraph();
+    expectedSubgraphs.add(sBA);
+    sBA.newEdge(sBA.newVertex("B"),"a",sBA.newVertex("A"));
+
+    // sABA : (A)<-a-(B)-a->(A)
+    LabeledGraph sABA = new LabeledGraph();
+    expectedSubgraphs.add(sABA);
+    LabeledVertex sABAvB = sABA.newVertex("B");
+    sABA.newEdge(sABAvB, "a", sABA.newVertex("A"));
+    sABA.newEdge(sABAvB, "a", sABA.newVertex("A"));
+
+    // sBAoA : (B)-a->(A)-a->(A)
+    LabeledGraph sBAoA = new LabeledGraph();
+    expectedSubgraphs.add(sBAoA);
+    LabeledVertex sBAoAvA = sBAoA.newVertex("A");
+    sBAoA.newEdge(sBAoA.newVertex("B"), "a", sBAoAvA);
+    sBAoA.newEdge(sBAoAvA, "a", sBAoA.newVertex("A"));
+
+    // sBAiA : (B)-a->(A)<-a-(A)
+    LabeledGraph sBAiA = new LabeledGraph();
+    expectedSubgraphs.add(sBAiA);
+    LabeledVertex sBAiAvA = sBAiA.newVertex("A");
+    sBAiA.newEdge(sBAiA.newVertex("B"), "a", sBAiAvA);
+    sBAiA.newEdge(sBAiA.newVertex("A"), "a", sBAiAvA );
+
+    // sAA : (A)-a->(A)
+    LabeledGraph sAA = new LabeledGraph();
+    expectedSubgraphs.add(sAA);
+    sAA.newEdge(sAA.newVertex("A"),"a",sAA.newVertex("A"));
+
+    // sFull
+    expectedSubgraphs.add(gA);
 
 
-    // (A)-a->
-    //        (A)-b->(B)-dL
-    // (A)-a->
-
-    LabeledGraph gC = new LabeledGraph();
-    graphs.add(gC);
-
-    LabeledVertex gCvA1 = gC.newVertex("A");
-    LabeledVertex gCvA2 = gC.newVertex("A");
-    LabeledVertex gCvA3 = gC.newVertex("A");
-    gC.newEdge(gCvA1,"a",gCvA2);
-    gC.newEdge(gCvA3,"a",gCvA2);
-    LabeledVertex gCvB1 = gC.newVertex("B");
-    gC.newEdge(gCvA2,"b",gCvB1);
-    gC.newEdge(gCvB1,"d",gCvB1);
-
+    // FSM
+    MTGSpan gSpan = new MTGSpan();
 
     Map<LabeledGraph,Float> frequentSubgraphs =
       gSpan.frequentSubgraphs(graphs, 0.7f);
 
-    //System.out.println(frequentSubgraphs);
+    checkAssertions(frequentSubgraphs, expectedSubgraphs);
+  }
 
+  private void checkAssertions(Map<LabeledGraph, Float> frequentSubgraphs,
+    Set<LabeledGraph> expectedSubgraphs) {
+    assertThat(frequentSubgraphs.size(), Is.is(expectedSubgraphs.size()));
+
+    // all frequent subgraphs are distinct
+    for(LabeledGraph leftGraph : frequentSubgraphs.keySet()) {
+      for(LabeledGraph rightGraph : frequentSubgraphs.keySet()) {
+        if(leftGraph != rightGraph) {
+          assertFalse(leftGraph.isIsomorphicTo(rightGraph));
+        }
+      }
+    }
+
+    // every frequent subgraph was expected
+    Map<LabeledGraph,LabeledGraph> graphMap = new HashMap<>();
+
+    for(LabeledGraph expectedSubgraph : expectedSubgraphs) {
+      for(LabeledGraph frequentSubgraph : frequentSubgraphs.keySet()) {
+        if(!graphMap.containsKey(frequentSubgraph)
+          && expectedSubgraph.isIsomorphicTo(frequentSubgraph)) {
+          graphMap.put(frequentSubgraph,expectedSubgraph);
+        }
+      }
+    }
+
+    for(LabeledGraph expectedSubgraph : expectedSubgraphs) {
+      if(!graphMap.containsValue(expectedSubgraph)){
+        System.out.println("expectation not found : " + expectedSubgraph);
+        System.out.println(expectedSubgraph.getAdjacencyMatrixCode());
+      }
+    }
+    for(LabeledGraph frequentSubgraph : frequentSubgraphs.keySet()) {
+      if(!graphMap.containsKey(frequentSubgraph)){
+        System.out.println("not expected : " + frequentSubgraph);
+        System.out.println(frequentSubgraph.getAdjacencyMatrixCode());
+      }
+    }
+
+    assertThat(graphMap.size(), Is.is(expectedSubgraphs.size()));
   }
 }
