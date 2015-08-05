@@ -35,6 +35,7 @@ import org.gradoop.model.impl.operators.Difference;
 import org.gradoop.model.impl.operators.DifferenceWithSmallResult;
 import org.gradoop.model.impl.operators.Intersect;
 import org.gradoop.model.impl.operators.IntersectWithSmall;
+import org.gradoop.model.impl.operators.Selection;
 import org.gradoop.model.impl.operators.Union;
 import org.gradoop.model.operators.BinaryCollectionToCollectionOperator;
 import org.gradoop.model.operators.BinaryGraphToGraphOperator;
@@ -263,7 +264,6 @@ public class EPGraphCollection implements
     // use graph ids to filter vertices from the actual graph structure
     Graph<Long, EPFlinkVertexData, EPFlinkEdgeData> filteredGraph =
       this.graph.filterOnVertices(
-
         new FilterFunction<Vertex<Long, EPFlinkVertexData>>() {
           @Override
           public boolean filter(
@@ -285,7 +285,7 @@ public class EPGraphCollection implements
   @Override
   public EPGraphCollection select(Predicate<EPGraph> predicateFunction) throws
     Exception {
-    throw new NotImplementedException();
+    return callForCollection(new Selection(predicateFunction));
   }
 
   @Override
