@@ -82,9 +82,10 @@ public class MTGSpanDfsCodeGrower extends MTGSpanRunnable {
 
             // backward edge
             if(parentMapper.contains(otherVertex)) {
-              if(parentMapper.growsBackwardToMinimalCodeBy(edge, otherVertex)){
+              //if(parentMapper.growsBackwardToMinimalCodeBy(edge,
+              // otherVertex)){
                 backwardEdges.put(edge,otherVertex);
-              }
+              //}
               // forward edge
             } else {
               forwardEdges.put(edge,rightmostVertex);
