@@ -114,24 +114,34 @@ public class DfsCodeMapper implements Cloneable{
     GSpanVertex toVertex) {
     boolean growsToMinimalCode = true;
 
-    // if both vertex labels are equal, follow only in direction
-    if(backwardEdge.getSourceVertex().getLabel() == backwardEdge
-      .getTargetVertex().getLabel()
-      && toVertex == backwardEdge.getSourceVertex()) {
-      growsToMinimalCode = false;
-    } else {
-      for(GSpanEdge mappedEdge : edges) {
-        // if at least one mapped edge connects backward target vertex
-        if(backwardEdge.contains(toVertex)
-          // and this edge is less or equal the backward candidate edge
-          && backwardEdge.compareTo(mappedEdge) <= 0){
-          // growing by this edge would cause a non-minimal code
-          growsToMinimalCode = false;
-          break;
-        }
+    for(GSpanEdge mappedEdge : edges) {
+      // if at least one mapped edge connects backward target vertex
+      if(backwardEdge.contains(toVertex)
+        // and this edge is less or equal the backward candidate edge
+        && backwardEdge.compareTo(mappedEdge) <= 0){
+        // growing by this edge would cause a non-minimal code
+        growsToMinimalCode = false;
+        break;
       }
+
     }
 
     return growsToMinimalCode;
+  }
+
+  public Integer getCoverage() {
+
+    List<Integer> edgeHashCodes = new LinkedList<>();
+
+    for(GSpanEdge edge : edges) {
+      edgeHashCodes.add(edge.hashCode());
+    }
+
+    Collections.sort(edgeHashCodes);
+
+    HashCodeBuilder builder = new HashCodeBuilder();
+    builder.append(edgeHashCodes);
+
+    return builder.hashCode();
   }
 }

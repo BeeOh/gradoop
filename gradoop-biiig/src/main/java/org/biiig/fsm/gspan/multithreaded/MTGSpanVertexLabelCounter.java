@@ -6,7 +6,7 @@ import org.biiig.model.LabeledVertex;
 /**
  * Created by peet on 15.07.15.
  */
-public class MTGSpanVertexLabelCounter extends MTGSpanRunnable {
+public class MTGSpanVertexLabelCounter extends MTGSpanAbstractRunnable {
   /**
    * constructor
    * @param worker calling worker

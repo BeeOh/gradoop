@@ -10,17 +10,13 @@ import org.biiig.model.LabeledEdge;
 import org.biiig.model.LabeledGraph;
 import org.biiig.model.LabeledVertex;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by peet on 17.07.15.
  */
-public class MTGSpanSearchSpaceInitializer extends MTGSpanRunnable {
+public class MTGSpanSearchSpaceInitializer extends MTGSpanAbstractDfsEncoder {
   public MTGSpanSearchSpaceInitializer(MTGSpanWorker worker) {
     super(worker);
   }
@@ -34,9 +30,11 @@ public class MTGSpanSearchSpaceInitializer extends MTGSpanRunnable {
   @Override
   public void run() {
 
+    worker.getDfsCodeSupporterMappersMap().clear();
+
     // for each graph
     for(LabeledGraph graph : worker.getGraphs()) {
-      GSpanGraph gSpanGraph = new GSpanGraph();
+      GSpanGraph supporter = new GSpanGraph();
       Map<LabeledVertex,GSpanVertex> vertexMap = new HashMap<>();
 
       // for each edge
@@ -79,7 +77,7 @@ public class MTGSpanSearchSpaceInitializer extends MTGSpanRunnable {
 
               // create GSpan source vertex if necessary
               if(gsSourceVertex == null) {
-                gsSourceVertex = gSpanGraph.newVertex(gsSourceLabel);
+                gsSourceVertex = supporter.newVertex(gsSourceLabel);
                 vertexMap.put(sourceVertex,gsSourceVertex);
               }
 
@@ -87,18 +85,18 @@ public class MTGSpanSearchSpaceInitializer extends MTGSpanRunnable {
               if(sourceVertex == targetVertex) {
                 gsTargetVertex = gsSourceVertex;
               } else if(gsTargetVertex == null ) {
-                gsTargetVertex = gSpanGraph.newVertex(gsTargetLabel);
+                gsTargetVertex = supporter.newVertex(gsTargetLabel);
                 vertexMap.put(targetVertex,gsTargetVertex);
               }
 
               // create GSpan edge
-              GSpanEdge gsEdge = gSpanGraph.newEdge(gsSourceVertex, gsEdgeLabel,
+              GSpanEdge gsEdge = supporter.newEdge(gsSourceVertex, gsEdgeLabel,
                 gsTargetVertex);
 
 
               // create 1-edge DFS code and mapper
               DfsCode dfsCode = new DfsCode();
-              DfsCodeMapper mapper = new DfsCodeMapper(gSpanGraph);
+              DfsCodeMapper mapper = new DfsCodeMapper(supporter);
 
               DfsEdge dfsEdge;
 
@@ -116,27 +114,7 @@ public class MTGSpanSearchSpaceInitializer extends MTGSpanRunnable {
               }
               dfsCode.add(dfsEdge);
               mapper.add(gsEdge);
-
-              // add mapper to existing DFS codes or create new entry
-              Collection<DfsCodeMapper> mappers =
-                worker.getDfsCodeMappersMap().get(dfsCode);
-
-              if (mappers == null) {
-                mappers = new ArrayList<>();
-                worker.getDfsCodeMappersMap().put(dfsCode,mappers);
-              }
-
-              // add graph to existing DFS codes or create new entry
-              Set<GSpanGraph> supporters =
-                worker.getDfsCodeSupportersMap().get(dfsCode);
-
-              if (supporters == null) {
-                supporters = new HashSet<>();
-                worker.getDfsCodeSupportersMap().put(dfsCode,supporters);
-              }
-
-              mappers.add(mapper);
-              supporters.add(gSpanGraph);
+              addDfsCodeSupporterMapper(dfsCode, supporter, mapper);
             }
           }
         }

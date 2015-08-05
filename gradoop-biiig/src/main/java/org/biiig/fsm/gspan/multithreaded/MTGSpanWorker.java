@@ -45,12 +45,12 @@ public class MTGSpanWorker {
   /**
    * search space of GSpan graphs on this worker
    */
-  private Map<DfsCode,Collection<DfsCodeMapper>> dfsCodeMappersMap =
-    new TreeMap<>();
+  private Map<DfsCode,Map<GSpanGraph,Collection<DfsCodeMapper>>>
+    dfsCodeSupporterMappersMap = new TreeMap<>();
   /**
    * DFS codes and local graphs supporting the code
    */
-  private Map<DfsCode,Set<GSpanGraph>> dfsCodeSupportersMap = new HashMap<>();
+  //private Map<DfsCode,Set<GSpanGraph>> dfsCodeSupportersMap = new HashMap<>();
   /**
    * collection of globally frequent and locally occurring DFS codes
    */
@@ -121,10 +121,10 @@ public class MTGSpanWorker {
   public Map<DfsCode, Integer> getDfsCodeSupports() {
     Map<DfsCode,Integer> dfsCodeSupports = new HashMap<>();
 
-    for(Map.Entry<DfsCode,Set<GSpanGraph>> dfsCodeSupporters :
-      dfsCodeSupportersMap.entrySet()) {
-      dfsCodeSupports.put(dfsCodeSupporters.getKey(),
-        dfsCodeSupporters.getValue().size());
+    for(Map.Entry<DfsCode, Map<GSpanGraph, Collection<DfsCodeMapper>>>
+      dfsCodeSupporterMappers : dfsCodeSupporterMappersMap.entrySet()) {
+      dfsCodeSupports.put(dfsCodeSupporterMappers.getKey(),
+        dfsCodeSupporterMappers.getValue().size());
     }
 
     return dfsCodeSupports;
@@ -161,8 +161,9 @@ public class MTGSpanWorker {
     return graphs;
   }
 
-  public Map<DfsCode, Collection<DfsCodeMapper>> getDfsCodeMappersMap() {
-    return dfsCodeMappersMap;
+  public Map<DfsCode, Map<GSpanGraph, Collection<DfsCodeMapper>>>
+  getDfsCodeSupporterMappersMap() {
+    return dfsCodeSupporterMappersMap;
   }
   public BiMap<String, Integer> getEdgeLabelDictionary() {
     return edgeLabelDictionary;
@@ -184,9 +185,9 @@ public class MTGSpanWorker {
     return master;
   }
 
-  public Map<DfsCode, Set<GSpanGraph>> getDfsCodeSupportersMap() {
+/*  public Map<DfsCode, Set<GSpanGraph>> getDfsCodeSupportersMap() {
     return dfsCodeSupportersMap;
-  }
+  }*/
 
   public int getParition() {
     return partition;
@@ -194,5 +195,11 @@ public class MTGSpanWorker {
 
   public Map<LabeledGraph, Float> getFrequentSubgraphs() {
     return frequentSubgraphs;
+  }
+
+  public void setDfsCodeSupporterMappersMap(
+    Map<DfsCode, Map<GSpanGraph, Collection<DfsCodeMapper>>>
+      dfsCodeSupporterMappersMap) {
+    this.dfsCodeSupporterMappersMap = dfsCodeSupporterMappersMap;
   }
 }

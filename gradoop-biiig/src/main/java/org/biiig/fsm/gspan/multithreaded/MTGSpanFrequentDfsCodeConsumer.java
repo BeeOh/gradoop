@@ -3,7 +3,7 @@ package org.biiig.fsm.gspan.multithreaded;
 /**
  * Created by peet on 27.07.15.
  */
-public class MTGSpanFrequentDfsCodeConsumer extends MTGSpanRunnable {
+public class MTGSpanFrequentDfsCodeConsumer extends MTGSpanAbstractRunnable {
   public MTGSpanFrequentDfsCodeConsumer(MTGSpanWorker worker) {
     super(worker);
   }

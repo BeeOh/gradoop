@@ -87,7 +87,7 @@ public class MTGSpanMaster {
    */
   public void distribute(Collection<LabeledGraph> graphs) {
 
-    int graphsPerWorker = graphs.size() / workers.size();
+    int graphsPerWorker = 10;// graphs.size() / workers.size();
     Long graphCount = 0l;
 
     Iterator<MTGSpanWorker> workerIterator = workers.iterator();
@@ -232,8 +232,6 @@ public class MTGSpanMaster {
             globalSupport + workerSupport);
         }
       }
-
-      worker.getDfsCodeSupportersMap().clear();
     }
   }
 

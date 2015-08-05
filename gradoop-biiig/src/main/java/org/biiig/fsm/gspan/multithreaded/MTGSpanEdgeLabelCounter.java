@@ -6,7 +6,7 @@ import org.biiig.model.LabeledGraph;
 /**
  * Created by peet on 15.07.15.
  */
-public class MTGSpanEdgeLabelCounter extends MTGSpanRunnable {
+public class MTGSpanEdgeLabelCounter extends MTGSpanAbstractRunnable {
 
   /**
    * constructor
