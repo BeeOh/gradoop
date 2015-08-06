@@ -41,10 +41,6 @@ public class GSpanEdge implements Comparable<GSpanEdge> {
     return label;
   }
 
-  public GSpanVertex getOtherVertex(GSpanVertex vertex) {
-    return vertex == sourceVertex ? targetVertex : sourceVertex;
-  }
-
   public GSpanVertex getSourceVertex() {
     return this.sourceVertex;
   }

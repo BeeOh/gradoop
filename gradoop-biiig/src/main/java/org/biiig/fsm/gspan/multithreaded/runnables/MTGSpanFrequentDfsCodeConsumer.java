@@ -1,5 +1,6 @@
 package org.biiig.fsm.gspan.multithreaded.runnables;
 
+import org.biiig.fsm.gspan.common.DfsCode;
 import org.biiig.fsm.gspan.multithreaded.MTGSpanWorker;
 
 /**
@@ -13,7 +14,11 @@ public class MTGSpanFrequentDfsCodeConsumer extends MTGSpanAbstractRunnable {
   @Override
   public void run() {
     worker.getGrowableDfsCodes().clear();
-    worker.getGrowableDfsCodes().addAll(
-      worker.getMaster().getGrowableDfsCodes());
+
+    for(DfsCode dfsCode : worker.getMaster().getGrowableDfsCodes()) {
+      dfsCode = dfsCode.clone();
+      if(worker.getDfsCodeSupporterMappersMap().containsKey(dfsCode))
+      worker.getGrowableDfsCodes().add(dfsCode);
+    }
   }
 }

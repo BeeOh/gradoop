@@ -62,19 +62,6 @@ public class LabeledGraph implements Comparable<LabeledGraph> {
     return edges;
   }
 
-  public List<LabeledEdge> getEdges(LabeledVertex vertex) {
-    List<LabeledEdge> vertexEdges = new LinkedList<>();
-    vertexEdges.addAll(vertexOutgoingEdgesMap.get(vertex));
-    vertexEdges.addAll(vertexIncomingEdgesMap.get(vertex));
-    return vertexEdges;
-  }
-
-  public void remove(LabeledVertex vertex) {
-    vertexIncomingEdgesMap.remove(vertex);
-    vertexOutgoingEdgesMap.remove(vertex);
-    vertices.remove(vertex);
-  }
-
   @Override
   public int compareTo(LabeledGraph other) {
     // compares invariants only

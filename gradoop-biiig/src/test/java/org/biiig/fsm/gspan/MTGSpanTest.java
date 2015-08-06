@@ -296,6 +296,125 @@ public class MTGSpanTest {
       gSpan.frequentSubgraphs(graphs, 1.0f);
 
     checkAssertions(frequentSubgraphs, expectedSubgraphs);
+
+
+  }
+
+  @Test
+  public void testLoops(){
+
+    System.out.println("\n*** Test GSpan with self-loops ***");
+
+    // search space
+    List<LabeledGraph> graphs = new ArrayList<>();
+
+    // gA:  ->        <-
+    //     a-(A)-d->(B)-b
+
+    LabeledGraph gA = new LabeledGraph();
+    graphs.add(gA);
+
+    LabeledVertex gAvA = gA.newVertex("A");
+    LabeledVertex gAvB = gA.newVertex("B");
+
+    gA.newEdge(gAvA,"a",gAvA);
+    gA.newEdge(gAvA,"b",gAvB);
+    gA.newEdge(gAvB,"b",gAvB);
+
+    // gB:  ->        <-
+    //     a-(A)-b->(D)-d
+
+    LabeledGraph gB = new LabeledGraph();
+    graphs.add(gB);
+
+    LabeledVertex gBvA = gB.newVertex("A");
+    LabeledVertex gBvD = gB.newVertex("D");
+
+    gB.newEdge(gBvA,"a",gBvA);
+    gB.newEdge(gBvA,"b",gBvD);
+    gB.newEdge(gBvD,"d",gBvD);
+
+    // gC:  ->        <-
+    //     c-(A)-b->(D)-d
+
+    LabeledGraph gC = new LabeledGraph();
+    graphs.add(gC);
+
+    LabeledVertex gCvA = gC.newVertex("A");
+    LabeledVertex gCvD = gC.newVertex("D");
+
+    gC.newEdge(gCvA,"c",gCvA);
+    gC.newEdge(gCvA,"b",gCvD);
+    gC.newEdge(gCvD,"d",gCvD);
+
+    // gD: (A)-c->(A)-a->(B)<-b-(B)
+
+    LabeledGraph gD = new LabeledGraph();
+    graphs.add(gD);
+
+    LabeledVertex gDvA1 = gD.newVertex("A");
+    LabeledVertex gDvA2 = gD.newVertex("A");
+
+    LabeledVertex gDvB1 = gD.newVertex("B");
+    LabeledVertex gDvB2 = gD.newVertex("B");
+
+    gD.newEdge(gDvA1,"c",gDvA2);
+    gD.newEdge(gDvA2,"a",gDvB1);
+    gD.newEdge(gDvB2,"b",gDvB1);
+
+    // expected result
+    Set<LabeledGraph> expectedSubgraphs = new HashSet<>();
+
+    // sLA: ->
+    //     a-(A)
+
+    LabeledGraph sLA = new LabeledGraph();
+    expectedSubgraphs.add(sLA);
+
+    LabeledVertex sLAvA = sLA.newVertex("A");
+
+    sLA.newEdge(sLAvA,"a",sLAvA);
+
+    // sLD: ->
+    //     d-(D)
+
+    LabeledGraph sLD = new LabeledGraph();
+    expectedSubgraphs.add(sLD);
+
+    LabeledVertex sLDvD = sLD.newVertex("D");
+
+    sLD.newEdge(sLDvD,"d",sLDvD);
+
+    // SAbD:  (A)-b->(D)
+
+    LabeledGraph SAbD = new LabeledGraph();
+    expectedSubgraphs.add(SAbD);
+
+    LabeledVertex sAbDvA = SAbD.newVertex("A");
+    LabeledVertex sAbDvD = SAbD.newVertex("D");
+
+    SAbD.newEdge(sAbDvA,"b",sAbDvD);
+
+    // sAbLD:          <-
+    //        (A)-b->(D)-d
+
+    LabeledGraph sAbLD = new LabeledGraph();
+    expectedSubgraphs.add(sAbLD);
+
+    LabeledVertex sAbLDvA = sAbLD.newVertex("A");
+    LabeledVertex sAbLDvD = sAbLD.newVertex("D");
+
+    sAbLD.newEdge(sAbLDvA,"b",sAbLDvD);
+    sAbLD.newEdge(sAbLDvD,"d",sAbLDvD);
+
+    // FSM
+    MTGSpan gSpan = new MTGSpan();
+
+    Map<LabeledGraph,Float> frequentSubgraphs =
+      gSpan.frequentSubgraphs(graphs, 0.5f);
+
+    checkAssertions(frequentSubgraphs, expectedSubgraphs);
+
   }
 
   private void checkAssertions(Map<LabeledGraph, Float> frequentSubgraphs,

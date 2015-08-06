@@ -1,7 +1,5 @@
 package org.biiig.fsm.gspan.common;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -9,37 +7,25 @@ import java.util.Set;
  */
 public class GSpanGraph {
 
-  private final Map<GSpanVertex,Set<GSpanEdge>> adjacencyLists =
-    new HashMap<>();
+  private final Set<GSpanVertex> vertices = new HashSet<>();
+  private final Set<GSpanEdge> edges = new HashSet<>();
 
   public GSpanVertex newVertex(Integer label) {
     GSpanVertex vertex = new GSpanVertex(label);
-    adjacencyLists.put(vertex,new HashSet<GSpanEdge>());
+    vertices.add(vertex);
     return vertex;
   }
 
   public GSpanEdge newEdge(GSpanVertex source, Integer label, GSpanVertex target)
   {
     GSpanEdge edge = new GSpanEdge(source,label,target);
-    adjacencyLists.get(source).add(edge);
-    adjacencyLists.get(target).add(edge);
+    edges.add(edge);
     return edge;
   }
 
-  public Set<GSpanVertex> getVertices() {
-    return adjacencyLists.keySet();
-  }
-
   public Set<GSpanEdge> getEdges() {
-    Set<GSpanEdge> edges = new HashSet<>();
-    for(Set<GSpanEdge> adjacencyList : adjacencyLists.values()) {
-      edges.addAll(adjacencyList);
-    }
     return edges;
   }
 
-  public Set<GSpanEdge> getAdjacencyList(GSpanVertex vertex) {
-    return adjacencyLists.get(vertex);
-  }
 
 }

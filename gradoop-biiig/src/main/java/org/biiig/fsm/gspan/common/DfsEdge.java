@@ -26,7 +26,7 @@ public class DfsEdge implements Comparable<DfsEdge> {
   }
 
   private int compareLexicographically(DfsEdge other) {
-    int comparison = 0;
+    int comparison;
 
     if(this.fromLabel < other.fromLabel) {
       comparison = -1;

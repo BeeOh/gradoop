@@ -40,12 +40,6 @@ public class DfsCodeMapper implements Cloneable{
     return vertices.get(getRightmostVertexPosition());
   }
 
-  public boolean isValidForGrowth(GSpanEdge edge) {
-    //System.out.println(edge + " ? " + edges);
-
-    // not already mapped and lexicographically greater or equal
-    return !contains(edge) && edge.compareTo(edges.get(0)) >= 0;
-  }
 
   public boolean contains(GSpanVertex vertex) {
 
@@ -59,8 +53,6 @@ public class DfsCodeMapper implements Cloneable{
     }
 
     return contains;
-
-    //return vertices.contains(vertex);
   }
 
   public boolean contains(GSpanEdge edge) {
@@ -75,13 +67,8 @@ public class DfsCodeMapper implements Cloneable{
     }
 
     return contains;
-
-    //return vertices.contains(vertex);
   }
 
-  public GSpanVertex getVertex(Integer position) {
-    return vertices.get(position);
-  }
 
   public DfsCodeMapper clone() {
     DfsCodeMapper clone = new DfsCodeMapper(graph);
@@ -106,25 +93,6 @@ public class DfsCodeMapper implements Cloneable{
     return vertices.indexOf(vertex);
   }
 
-  public boolean growsBackwardToMinimalCodeBy(GSpanEdge backwardEdge,
-    GSpanVertex toVertex) {
-    boolean growsToMinimalCode = true;
-
-    for(GSpanEdge mappedEdge : edges) {
-      // if at least one mapped edge connects backward target vertex
-      if(backwardEdge.contains(toVertex)
-        // and this edge is less or equal the backward candidate edge
-        && backwardEdge.compareTo(mappedEdge) <= 0){
-        // growing by this edge would cause a non-minimal code
-        growsToMinimalCode = false;
-        break;
-      }
-
-    }
-
-    return growsToMinimalCode;
-  }
-
   public Integer getCoverage() {
 
     List<Integer> edgeHashCodes = new LinkedList<>();
@@ -140,4 +108,9 @@ public class DfsCodeMapper implements Cloneable{
 
     return builder.hashCode();
   }
+
+  public GSpanEdge getFirstEdge() {
+    return edges.get(0);
+  }
+
 }

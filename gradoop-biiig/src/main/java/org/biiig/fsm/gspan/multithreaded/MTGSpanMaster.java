@@ -74,6 +74,7 @@ public class MTGSpanMaster {
 
     this.minSupport = minSupport;
     int numberOfWorkers = Runtime.getRuntime().availableProcessors();
+    //int numberOfWorkers = 1;
 
     for(int i=0; i < numberOfWorkers; i++) {
       this.workers.add(new MTGSpanWorker(this,i));
@@ -87,7 +88,9 @@ public class MTGSpanMaster {
    */
   public void distribute(Collection<LabeledGraph> graphs) {
 
-    int graphsPerWorker = 10;// graphs.size() / workers.size();
+    int graphsPerWorker = graphs.size() / workers.size();
+    //int graphsPerWorker = 10;
+
     Long graphCount = 0l;
 
     Iterator<MTGSpanWorker> workerIterator = workers.iterator();
@@ -113,24 +116,18 @@ public class MTGSpanMaster {
     generateVertexLabelDictionary();
     broadcastVertexLabelDictionary();
 
-    System.out.println(vertexLabelDictionary);
-
     // frequent edge labels
     countEdgeLabels();
     aggregateEdgeLabelSupport();
     generateEdgeLabelDictionary();
     broadcastEdgeLabelDictionary();
 
-    System.out.println(edgeLabelDictionary);
-
     // single edge DFS codes
-
     initializeSearchSpace();
     aggregateDfsCodeSupports();
     resetGrowableDfsCodes();
 
     // grow frequent DFS codes
-
     while (!growableDfsCodes.isEmpty()) {
       broadcastGrowableDfsCodes();
       growFrequentDfsCodes();
@@ -217,20 +214,15 @@ public class MTGSpanMaster {
 
     // for each worker
     for(MTGSpanWorker worker : workers) {
+      for(Map.Entry<DfsCode,Integer> workerDfsCodeSupport : worker
+        .getDfsCodeSupports().entrySet()){
 
-      if(dfsCodeSupports.isEmpty()) {
-        dfsCodeSupports.putAll(worker.getDfsCodeSupports());
-      } else {
-        for(Map.Entry<DfsCode,Integer> workerDfsCodeSupport : worker
-          .getDfsCodeSupports().entrySet()){
+        DfsCode dfsCode = workerDfsCodeSupport.getKey().clone();
+        Integer workerSupport = workerDfsCodeSupport.getValue();
+        Integer globalSupport = dfsCodeSupports.get(dfsCode);
 
-          DfsCode dfsCode = workerDfsCodeSupport.getKey();
-          Integer workerSupport = workerDfsCodeSupport.getValue();
-          Integer globalSupport = dfsCodeSupports.get(dfsCode);
-
-          dfsCodeSupports.put(dfsCode,globalSupport == null ? workerSupport :
-            globalSupport + workerSupport);
-        }
+        dfsCodeSupports.put(dfsCode,globalSupport == null ? workerSupport :
+          globalSupport + workerSupport);
       }
     }
   }
@@ -386,5 +378,10 @@ public class MTGSpanMaster {
         System.out.println(entry.getValue() + "\t" + entry.getKey());
       }
     }
+  }
+
+  public void printDictionaries() {
+    System.out.println(vertexLabelDictionary);
+    System.out.println(edgeLabelDictionary);
   }
 }

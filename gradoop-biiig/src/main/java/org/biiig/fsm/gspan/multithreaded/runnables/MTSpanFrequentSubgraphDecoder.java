@@ -41,7 +41,7 @@ public class MTSpanFrequentSubgraphDecoder extends MTGSpanAbstractRunnable {
 
       Map<Integer,LabeledVertex> vertexMap = new HashMap<>();
 
-      for(DfsEdge dfsEdge : dfsCode.getEdges()) {
+      for(DfsEdge dfsEdge : dfsCode.getDfsEdges()) {
 
         String edgeLabel = edgeLabelDictionary.get(dfsEdge.getEdgeLabel());
 

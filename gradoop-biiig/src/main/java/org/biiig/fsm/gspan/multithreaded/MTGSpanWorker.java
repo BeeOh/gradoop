@@ -5,10 +5,12 @@ import com.google.common.collect.HashBiMap;
 import org.biiig.fsm.gspan.common.DfsCode;
 import org.biiig.fsm.gspan.common.DfsCodeMapper;
 import org.biiig.fsm.gspan.common.GSpanGraph;
-import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanDfsCodeGrower;
+import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanAdjacencyListBasedDfsCodeGrower;
 import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanEdgeLabelCounter;
 import org.biiig.fsm.gspan.multithreaded.runnables
   .MTGSpanEdgeLabelDictionaryConsumer;
+import org.biiig.fsm.gspan.multithreaded.runnables
+  .MTGSpanEdgeSetBasedDfsCodeGrower;
 import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanFrequentDfsCodeConsumer;
 import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanSearchSpaceInitializer;
 import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanVertexLabelCounter;
@@ -111,7 +113,8 @@ public class MTGSpanWorker {
    * grows all local DFS codes by one edge following GSPan growth restrictions
    */
   public void growFrequentDfsCodes() {
-    thread = new Thread(new MTGSpanDfsCodeGrower(this));
+    //thread = new Thread(new MTGSpanAdjacencyListBasedDfsCodeGrower(this));
+    thread = new Thread(new MTGSpanEdgeSetBasedDfsCodeGrower(this));
     thread.start();
   }
 
