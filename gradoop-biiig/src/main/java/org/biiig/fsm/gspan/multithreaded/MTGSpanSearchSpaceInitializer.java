@@ -100,7 +100,13 @@ public class MTGSpanSearchSpaceInitializer extends MTGSpanAbstractDfsEncoder {
 
               DfsEdge dfsEdge;
 
-              if (gsSourceVertex.compareTo(gsTargetVertex) <= 0) {
+              // self-loop
+              if (gsSourceVertex == gsTargetVertex){
+                dfsEdge = new DfsEdge(0, 0, gsSourceVertex.getLabel()
+                  , true, gsEdge.getLabel(), gsSourceVertex.getLabel());
+                mapper.add(gsSourceVertex);
+                mapper.add(gsTargetVertex);
+              } else if (gsSourceVertex.compareTo(gsTargetVertex) <= 0) {
                 dfsEdge = new DfsEdge(0, 1, gsSourceVertex.getLabel()
                   , true, gsEdge.getLabel(), gsTargetVertex.getLabel());
                 mapper.add(gsSourceVertex);
