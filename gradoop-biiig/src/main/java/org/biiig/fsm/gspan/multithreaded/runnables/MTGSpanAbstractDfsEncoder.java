@@ -1,14 +1,14 @@
-package org.biiig.fsm.gspan.multithreaded;
+package org.biiig.fsm.gspan.multithreaded.runnables;
 
-import org.biiig.fsm.gspan.DfsCode;
-import org.biiig.fsm.gspan.DfsCodeMapper;
-import org.biiig.fsm.gspan.GSpanGraph;
+import org.biiig.fsm.gspan.common.DfsCode;
+import org.biiig.fsm.gspan.common.DfsCodeMapper;
+import org.biiig.fsm.gspan.common.GSpanGraph;
+import org.biiig.fsm.gspan.multithreaded.MTGSpanWorker;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Created by peet on 05.08.15.

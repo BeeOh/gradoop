@@ -1,11 +1,12 @@
-package org.biiig.fsm.gspan.multithreaded;
+package org.biiig.fsm.gspan.multithreaded.runnables;
 
-import org.biiig.fsm.gspan.DfsCode;
-import org.biiig.fsm.gspan.DfsCodeMapper;
-import org.biiig.fsm.gspan.DfsEdge;
-import org.biiig.fsm.gspan.GSpanEdge;
-import org.biiig.fsm.gspan.GSpanGraph;
-import org.biiig.fsm.gspan.GSpanVertex;
+import org.biiig.fsm.gspan.common.DfsCode;
+import org.biiig.fsm.gspan.common.DfsCodeMapper;
+import org.biiig.fsm.gspan.common.DfsEdge;
+import org.biiig.fsm.gspan.common.GSpanEdge;
+import org.biiig.fsm.gspan.common.GSpanGraph;
+import org.biiig.fsm.gspan.common.GSpanVertex;
+import org.biiig.fsm.gspan.multithreaded.MTGSpanWorker;
 import org.biiig.model.LabeledEdge;
 import org.biiig.model.LabeledGraph;
 import org.biiig.model.LabeledVertex;

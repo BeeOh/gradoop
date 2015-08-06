@@ -1,10 +1,6 @@
-package org.biiig.fsm.gspan;
+package org.biiig.fsm.gspan.common;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.biiig.model.LabeledEdge;
-import org.biiig.model.LabeledGraph;
-import scala.Int;
 
 import java.util.*;
 

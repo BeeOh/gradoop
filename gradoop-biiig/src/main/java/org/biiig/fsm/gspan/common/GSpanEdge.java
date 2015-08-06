@@ -1,4 +1,4 @@
-package org.biiig.fsm.gspan;
+package org.biiig.fsm.gspan.common;
 
 /**
  * Created by peet on 15.07.15.

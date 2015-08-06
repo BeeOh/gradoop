@@ -2,7 +2,7 @@ package org.biiig.fsm.gspan.multithreaded;
 
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.commons.lang3.StringUtils;
-import org.biiig.fsm.gspan.DfsCode;
+import org.biiig.fsm.gspan.common.DfsCode;
 import org.biiig.fsm.gspan.common.FrequentLabel;
 import org.biiig.model.LabeledGraph;
 

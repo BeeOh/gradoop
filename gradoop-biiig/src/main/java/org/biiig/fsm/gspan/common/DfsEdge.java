@@ -1,8 +1,7 @@
-package org.biiig.fsm.gspan;
+package org.biiig.fsm.gspan.common;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import scala.Int;
 
 /**
  * Created by peet on 01.07.15.

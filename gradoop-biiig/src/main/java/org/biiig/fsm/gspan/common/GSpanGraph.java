@@ -1,4 +1,4 @@
-package org.biiig.fsm.gspan;
+package org.biiig.fsm.gspan.common;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

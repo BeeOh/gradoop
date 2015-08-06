@@ -2,16 +2,24 @@ package org.biiig.fsm.gspan.multithreaded;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import org.biiig.fsm.gspan.DfsCode;
-import org.biiig.fsm.gspan.DfsCodeMapper;
-import org.biiig.fsm.gspan.GSpanGraph;
+import org.biiig.fsm.gspan.common.DfsCode;
+import org.biiig.fsm.gspan.common.DfsCodeMapper;
+import org.biiig.fsm.gspan.common.GSpanGraph;
+import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanDfsCodeGrower;
+import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanEdgeLabelCounter;
+import org.biiig.fsm.gspan.multithreaded.runnables
+  .MTGSpanEdgeLabelDictionaryConsumer;
+import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanFrequentDfsCodeConsumer;
+import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanSearchSpaceInitializer;
+import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanVertexLabelCounter;
+import org.biiig.fsm.gspan.multithreaded.runnables.MTGSpanVertexLabelDictionaryConsumer;
+import org.biiig.fsm.gspan.multithreaded.runnables.MTSpanFrequentSubgraphDecoder;
 import org.biiig.model.LabeledGraph;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**

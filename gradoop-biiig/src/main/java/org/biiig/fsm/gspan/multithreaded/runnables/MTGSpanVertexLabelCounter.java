@@ -1,5 +1,6 @@
-package org.biiig.fsm.gspan.multithreaded;
+package org.biiig.fsm.gspan.multithreaded.runnables;
 
+import org.biiig.fsm.gspan.multithreaded.MTGSpanWorker;
 import org.biiig.model.LabeledGraph;
 import org.biiig.model.LabeledVertex;
 

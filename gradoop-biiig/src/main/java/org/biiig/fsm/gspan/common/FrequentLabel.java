@@ -16,7 +16,7 @@ public class FrequentLabel implements Comparable<FrequentLabel> {
 
   @Override
   public int compareTo(FrequentLabel other) {
-    int comparison = (int)(other.support - this.support);
+    int comparison = other.support - this.support;
 
     if (comparison == 0) {
 

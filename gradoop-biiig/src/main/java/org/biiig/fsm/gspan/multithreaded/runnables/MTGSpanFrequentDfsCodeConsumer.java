@@ -1,4 +1,6 @@
-package org.biiig.fsm.gspan.multithreaded;
+package org.biiig.fsm.gspan.multithreaded.runnables;
+
+import org.biiig.fsm.gspan.multithreaded.MTGSpanWorker;
 
 /**
  * Created by peet on 27.07.15.
