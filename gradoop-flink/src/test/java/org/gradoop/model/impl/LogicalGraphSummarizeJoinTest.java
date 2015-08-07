@@ -15,14 +15,18 @@
  * along with Gradoop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.operators;
+package org.gradoop.model.impl;
 
-import org.gradoop.model.VertexData;
-import org.gradoop.model.helper.Predicate;
-import org.gradoop.model.impl.EPVertexCollection;
+import org.gradoop.model.impl.operators.Summarization;
+import org.gradoop.model.impl.operators.SummarizationJoin;
 
-public interface EPVertexCollectionOperators<VD extends VertexData> extends
-  EPCollectionOperators<VD> {
-
-  EPVertexCollection<VD> filter(Predicate<VD> predicateFunction);
+public class LogicalGraphSummarizeJoinTest extends LogicalGraphSummarizeTest {
+  @Override
+  public Summarization<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+  getSummarizationImpl(
+    String vertexGroupingKey, boolean useVertexLabel, String edgeGroupingKey,
+    boolean useEdgeLabel) {
+    return new SummarizationJoin<>(vertexGroupingKey, edgeGroupingKey,
+      useVertexLabel, useEdgeLabel);
+  }
 }

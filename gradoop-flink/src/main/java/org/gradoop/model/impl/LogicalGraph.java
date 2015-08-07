@@ -24,7 +24,9 @@ import org.apache.flink.graph.Edge;
 import org.apache.flink.graph.Graph;
 import org.gradoop.io.json.JsonWriter;
 import org.gradoop.model.*;
+import org.gradoop.model.helper.PatternGraph;
 import org.gradoop.model.helper.Predicate;
+import org.gradoop.model.helper.Subgraph;
 import org.gradoop.model.helper.UnaryFunction;
 import org.gradoop.model.impl.operators.Aggregation;
 import org.gradoop.model.impl.operators.Combination;
@@ -32,7 +34,7 @@ import org.gradoop.model.impl.operators.Exclusion;
 import org.gradoop.model.impl.operators.Overlap;
 import org.gradoop.model.impl.operators.SummarizationJoin;
 import org.gradoop.model.operators.BinaryGraphToGraphOperator;
-import org.gradoop.model.operators.EPGraphOperators;
+import org.gradoop.model.operators.LogicalGraphOperators;
 import org.gradoop.model.operators.UnaryGraphToCollectionOperator;
 import org.gradoop.model.operators.UnaryGraphToGraphOperator;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -46,9 +48,8 @@ import java.util.Map;
  * @author Martin Junghanns
  * @author Niklas Teichmann
  */
-public class EPGraph<VD extends VertexData, ED extends EdgeData, GD extends
-  GraphData> implements
-  EPGraphOperators<VD, ED, GD>, Identifiable, Attributed, Labeled {
+public class LogicalGraph<VD extends VertexData, ED extends EdgeData, GD extends
+  GraphData> implements LogicalGraphOperators<VD, ED, GD>, Identifiable, Attributed, Labeled {
 
   private final VertexDataFactory<VD> vertexDataFactory;
 
@@ -68,7 +69,7 @@ public class EPGraph<VD extends VertexData, ED extends EdgeData, GD extends
    */
   private GD graphData;
 
-  private EPGraph(Graph<Long, VD, ED> graph, GD graphData,
+  private LogicalGraph(Graph<Long, VD, ED> graph, GD graphData,
     VertexDataFactory<VD> vertexDataFactory,
     EdgeDataFactory<ED> edgeDataFactory, GraphDataFactory<GD> graphDataFactory,
     ExecutionEnvironment env) {
@@ -93,12 +94,12 @@ public class EPGraph<VD extends VertexData, ED extends EdgeData, GD extends
   }
 
   public static <VD extends VertexData, ED extends EdgeData, GD extends
-    GraphData> EPGraph<VD, ED, GD> fromGraph(
+    GraphData> LogicalGraph<VD, ED, GD> fromGraph(
     Graph<Long, VD, ED> graph, GD graphData,
     VertexDataFactory<VD> vertexDataFactory,
     EdgeDataFactory<ED> edgeDataFactory,
     GraphDataFactory<GD> graphDataFactory) {
-    return new EPGraph<>(graph, graphData, vertexDataFactory, edgeDataFactory,
+    return new LogicalGraph<>(graph, graphData, vertexDataFactory, edgeDataFactory,
       graphDataFactory, graph.getContext());
   }
 
@@ -107,17 +108,17 @@ public class EPGraph<VD extends VertexData, ED extends EdgeData, GD extends
   }
 
   @Override
-  public EPVertexCollection<VD> getVertices() {
-    return new EPVertexCollection<>(graph.getVertices());
+  public VertexDataCollection<VD> getVertices() {
+    return new VertexDataCollection<>(graph.getVertices());
   }
 
   @Override
-  public EPEdgeCollection<ED> getEdges() {
-    return new EPEdgeCollection<>(graph.getEdges());
+  public EdgeDataCollection<ED> getEdges() {
+    return new EdgeDataCollection<>(graph.getEdges());
   }
 
   @Override
-  public EPEdgeCollection<ED> getOutgoingEdges(final Long vertexID) {
+  public EdgeDataCollection<ED> getOutgoingEdges(final Long vertexID) {
     DataSet<Edge<Long, ED>> outgoingEdges =
       this.graph.getEdges().filter(new FilterFunction<Edge<Long, ED>>() {
         @Override
@@ -125,12 +126,12 @@ public class EPGraph<VD extends VertexData, ED extends EdgeData, GD extends
           return edgeTuple.getValue().getSourceVertexId().equals(vertexID);
         }
       });
-    return new EPEdgeCollection<>(outgoingEdges);
+    return new EdgeDataCollection<>(outgoingEdges);
   }
 
   @Override
-  public EPEdgeCollection<ED> getIncomingEdges(final Long vertexID) {
-    return new EPEdgeCollection<>(
+  public EdgeDataCollection<ED> getIncomingEdges(final Long vertexID) {
+    return new EdgeDataCollection<>(
       this.graph.getEdges().filter(new FilterFunction<Edge<Long, ED>>() {
         @Override
         public boolean filter(Edge<Long, ED> edgeTuple) throws Exception {
@@ -150,31 +151,31 @@ public class EPGraph<VD extends VertexData, ED extends EdgeData, GD extends
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> match(String graphPattern,
-    Predicate<EPPatternGraph> predicateFunc) {
+  public GraphCollection<VD, ED, GD> match(String graphPattern,
+    Predicate<PatternGraph> predicateFunc) {
     throw new NotImplementedException();
   }
 
   @Override
-  public EPGraph<VD, ED, GD> project(UnaryFunction<VD, VD> vertexFunction,
+  public LogicalGraph<VD, ED, GD> project(UnaryFunction<VD, VD> vertexFunction,
     UnaryFunction<ED, ED> edgeFunction) {
     throw new NotImplementedException();
   }
 
   @Override
-  public <O extends Number> EPGraph<VD, ED, GD> aggregate(String propertyKey,
-    UnaryFunction<EPGraph<VD, ED, GD>, O> aggregateFunc) throws Exception {
+  public <O extends Number> LogicalGraph<VD, ED, GD> aggregate(String propertyKey,
+    UnaryFunction<LogicalGraph<VD, ED, GD>, O> aggregateFunc) throws Exception {
     return callForGraph(new Aggregation<>(propertyKey, aggregateFunc));
   }
 
   @Override
-  public EPGraph<VD, ED, GD> summarize(String vertexGroupingKey) throws
+  public LogicalGraph<VD, ED, GD> summarize(String vertexGroupingKey) throws
     Exception {
     return summarize(vertexGroupingKey, null);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> summarize(String vertexGroupingKey,
+  public LogicalGraph<VD, ED, GD> summarize(String vertexGroupingKey,
     String edgeGroupingKey) throws Exception {
     return callForGraph(
       new SummarizationJoin<VD, ED, GD>(vertexGroupingKey, edgeGroupingKey,
@@ -182,24 +183,24 @@ public class EPGraph<VD extends VertexData, ED extends EdgeData, GD extends
   }
 
   @Override
-  public EPGraph<VD, ED, GD> summarizeOnVertexLabel() throws Exception {
+  public LogicalGraph<VD, ED, GD> summarizeOnVertexLabel() throws Exception {
     return summarizeOnVertexLabel(null, null);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> summarizeOnVertexLabelAndVertexProperty(
+  public LogicalGraph<VD, ED, GD> summarizeOnVertexLabelAndVertexProperty(
     String vertexGroupingKey) throws Exception {
     return summarizeOnVertexLabel(vertexGroupingKey, null);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> summarizeOnVertexLabelAndEdgeProperty(
+  public LogicalGraph<VD, ED, GD> summarizeOnVertexLabelAndEdgeProperty(
     String edgeGroupingKey) throws Exception {
     return summarizeOnVertexLabel(null, edgeGroupingKey);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> summarizeOnVertexLabel(String vertexGroupingKey,
+  public LogicalGraph<VD, ED, GD> summarizeOnVertexLabel(String vertexGroupingKey,
     String edgeGroupingKey) throws Exception {
     return callForGraph(
       new SummarizationJoin<VD, ED, GD>(vertexGroupingKey, edgeGroupingKey,
@@ -207,24 +208,24 @@ public class EPGraph<VD extends VertexData, ED extends EdgeData, GD extends
   }
 
   @Override
-  public EPGraph<VD, ED, GD> summarizeOnVertexAndEdgeLabel() throws Exception {
+  public LogicalGraph<VD, ED, GD> summarizeOnVertexAndEdgeLabel() throws Exception {
     return summarizeOnVertexAndEdgeLabel(null, null);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> summarizeOnVertexAndEdgeLabelAndVertexProperty(
+  public LogicalGraph<VD, ED, GD> summarizeOnVertexAndEdgeLabelAndVertexProperty(
     String vertexGroupingKey) throws Exception {
     return summarizeOnVertexAndEdgeLabel(vertexGroupingKey, null);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> summarizeOnVertexAndEdgeLabelAndEdgeProperty(
+  public LogicalGraph<VD, ED, GD> summarizeOnVertexAndEdgeLabelAndEdgeProperty(
     String edgeGroupingKey) throws Exception {
     return summarizeOnVertexAndEdgeLabel(null, edgeGroupingKey);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> summarizeOnVertexAndEdgeLabel(
+  public LogicalGraph<VD, ED, GD> summarizeOnVertexAndEdgeLabel(
     String vertexGroupingKey, String edgeGroupingKey) throws Exception {
     return callForGraph(
       new SummarizationJoin<VD, ED, GD>(vertexGroupingKey, edgeGroupingKey,
@@ -232,35 +233,35 @@ public class EPGraph<VD extends VertexData, ED extends EdgeData, GD extends
   }
 
   @Override
-  public EPGraph<VD, ED, GD> combine(EPGraph<VD, ED, GD> otherGraph) {
+  public LogicalGraph<VD, ED, GD> combine(LogicalGraph<VD, ED, GD> otherGraph) {
     return callForGraph(new Combination<VD, ED, GD>(), otherGraph);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> overlap(EPGraph<VD, ED, GD> otherGraph) {
+  public LogicalGraph<VD, ED, GD> overlap(LogicalGraph<VD, ED, GD> otherGraph) {
     return callForGraph(new Overlap<VD, ED, GD>(), otherGraph);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> exclude(EPGraph<VD, ED, GD> otherGraph) {
+  public LogicalGraph<VD, ED, GD> exclude(LogicalGraph<VD, ED, GD> otherGraph) {
     return callForGraph(new Exclusion<VD, ED, GD>(), otherGraph);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> callForGraph(
+  public LogicalGraph<VD, ED, GD> callForGraph(
     UnaryGraphToGraphOperator<VD, ED, GD> operator) throws Exception {
     return operator.execute(this);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> callForGraph(
+  public LogicalGraph<VD, ED, GD> callForGraph(
     BinaryGraphToGraphOperator<VD, ED, GD> operator,
-    EPGraph<VD, ED, GD> otherGraph) {
+    LogicalGraph<VD, ED, GD> otherGraph) {
     return operator.execute(this, otherGraph);
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> callForCollection(
+  public GraphCollection<VD, ED, GD> callForCollection(
     UnaryGraphToCollectionOperator<VD, ED, GD> operator) {
     return operator.execute(this);
   }

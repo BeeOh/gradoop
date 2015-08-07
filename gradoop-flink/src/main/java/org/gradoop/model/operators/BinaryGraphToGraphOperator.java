@@ -20,11 +20,11 @@ package org.gradoop.model.operators;
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
-import org.gradoop.model.impl.EPGraph;
+import org.gradoop.model.impl.LogicalGraph;
 
 public interface BinaryGraphToGraphOperator<VD extends VertexData, ED extends
   EdgeData, GD extends GraphData> extends
   Operator {
-  EPGraph<VD, ED, GD> execute(EPGraph<VD, ED, GD> firstGraph,
-    EPGraph<VD, ED, GD> secondGraph);
+  LogicalGraph<VD, ED, GD> execute(LogicalGraph<VD, ED, GD> firstGraph,
+    LogicalGraph<VD, ED, GD> secondGraph);
 }

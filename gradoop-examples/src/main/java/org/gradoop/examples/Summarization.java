@@ -25,7 +25,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.flink.api.common.ProgramDescription;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.gradoop.model.impl.EPGraph;
+import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.impl.FlinkGraphStore;
 import org.gradoop.model.store.EPGraphStore;
 
@@ -73,7 +73,7 @@ public class Summarization implements ProgramDescription {
     EPGraphStore graphStore =
       FlinkGraphStore.fromJsonFile(vertexInputPath, edgeInputPath, env);
 
-    EPGraph databaseGraph = graphStore.getDatabaseGraph();
+    LogicalGraph databaseGraph = graphStore.getDatabaseGraph();
 
     boolean useVertexKey = cmd.hasOption(OPTION_VERTEX_GROUPING_KEY);
     String vertexKey =
@@ -84,7 +84,7 @@ public class Summarization implements ProgramDescription {
     boolean useVertexLabels = cmd.hasOption(OPTION_USE_VERTEX_LABELS);
     boolean useEdgeLabels = cmd.hasOption(OPTION_USE_EDGE_LABELS);
 
-    EPGraph summarizedGraph = null;
+    LogicalGraph summarizedGraph = null;
     if (useVertexLabels && useEdgeLabels && useVertexKey && useEdgeKey) {
       summarizedGraph =
         databaseGraph.summarizeOnVertexAndEdgeLabel(vertexKey, edgeKey);
@@ -124,7 +124,7 @@ public class Summarization implements ProgramDescription {
     }
   }
 
-  private static void writeOutputFiles(EPGraph graph, String outputPath) throws
+  private static void writeOutputFiles(LogicalGraph graph, String outputPath) throws
     Exception {
     final String fileSeparator = System.getProperty("file.separator");
     final String vertexFile =

@@ -20,11 +20,11 @@ package org.gradoop.model.operators;
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
-import org.gradoop.model.impl.EPGraph;
-import org.gradoop.model.impl.EPGraphCollection;
+import org.gradoop.model.impl.LogicalGraph;
+import org.gradoop.model.impl.GraphCollection;
 
 public interface UnaryGraphToCollectionOperator<VD extends VertexData, ED
   extends EdgeData, GD extends GraphData> extends
   Operator {
-  EPGraphCollection<VD, ED, GD> execute(EPGraph<VD, ED, GD> graph);
+  GraphCollection<VD, ED, GD> execute(LogicalGraph<VD, ED, GD> graph);
 }

@@ -17,7 +17,7 @@
 
 package org.gradoop.model.impl;
 
-import org.gradoop.model.EPFlinkTest;
+import org.gradoop.model.FlinkTest;
 import org.gradoop.model.helper.UnaryFunction;
 import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
@@ -25,28 +25,37 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class EPGraphAggregateTest extends EPFlinkTest {
-  private EPGraphStore graphStore;
+public class LogicalGraphAggregateTest extends FlinkTest {
+  private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+    graphStore;
 
-  public EPGraphAggregateTest() {
+  public LogicalGraphAggregateTest() {
     this.graphStore = createSocialGraph();
   }
 
   @Test
   public void aggregateEdgeCountTest() throws Exception {
 
-    EPGraph forumGraph = graphStore.getGraph(3L);
+    LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      forumGraph = graphStore.getGraph(3L);
     final String aggPropertyKey = "eCount";
 
-    UnaryFunction<EPGraph, Long> aggregateFunc =
-      new UnaryFunction<EPGraph, Long>() {
+    UnaryFunction<LogicalGraph<DefaultVertexData, DefaultEdgeData,
+      DefaultGraphData>, Long>
+      aggregateFunc =
+      new UnaryFunction<LogicalGraph<DefaultVertexData, DefaultEdgeData,
+        DefaultGraphData>, Long>() {
         @Override
-        public Long execute(EPGraph entity) throws Exception {
+        public Long execute(
+          LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+            entity) throws
+          Exception {
           return entity.getEdges().size();
         }
       };
 
-    EPGraph newGraph = forumGraph.aggregate(aggPropertyKey, aggregateFunc);
+    LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      newGraph = forumGraph.aggregate(aggPropertyKey, aggregateFunc);
 
     assertNotNull("graph was null", newGraph);
     assertEquals("wrong property count", 1, newGraph.getPropertyCount());

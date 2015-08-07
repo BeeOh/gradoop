@@ -21,7 +21,7 @@ import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.helper.UnaryFunction;
-import org.gradoop.model.impl.EPGraph;
+import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.operators.UnaryGraphToGraphOperator;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -39,7 +39,7 @@ public class Projection<VD extends VertexData, ED extends EdgeData, GD
   }
 
   @Override
-  public EPGraph<VD, ED, GD> execute(EPGraph<VD, ED, GD> graph) {
+  public LogicalGraph<VD, ED, GD> execute(LogicalGraph<VD, ED, GD> graph) {
     throw new NotImplementedException();
   }
 

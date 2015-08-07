@@ -6,7 +6,6 @@ import org.apache.flink.graph.Vertex;
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
-import org.gradoop.model.impl.Subgraph;
 
 public class KeySelectors {
   /**

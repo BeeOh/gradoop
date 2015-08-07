@@ -31,8 +31,8 @@ import org.apache.flink.util.Collector;
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
-import org.gradoop.model.impl.EPGraphCollection;
-import org.gradoop.model.impl.Subgraph;
+import org.gradoop.model.impl.GraphCollection;
+import org.gradoop.model.helper.Subgraph;
 import org.gradoop.model.operators.BinaryCollectionToCollectionOperator;
 
 import java.util.Iterator;
@@ -50,9 +50,9 @@ public abstract class AbstractBinaryCollectionToCollectionOperator<VD extends
   protected ExecutionEnvironment env;
 
   @Override
-  public EPGraphCollection<VD, ED, GD> execute(
-    EPGraphCollection<VD, ED, GD> firstCollection,
-    EPGraphCollection<VD, ED, GD> secondCollection) throws Exception {
+  public GraphCollection<VD, ED, GD> execute(
+    GraphCollection<VD, ED, GD> firstCollection,
+    GraphCollection<VD, ED, GD> secondCollection) throws Exception {
 
     firstGraph = firstCollection.getGellyGraph();
     firstSubgraphs = firstCollection.getSubgraphs();
@@ -63,9 +63,9 @@ public abstract class AbstractBinaryCollectionToCollectionOperator<VD extends
     return executeInternal(firstCollection, secondCollection);
   }
 
-  protected abstract EPGraphCollection<VD, ED, GD> executeInternal(
-    EPGraphCollection<VD, ED, GD> firstCollection,
-    EPGraphCollection<VD, ED, GD> secondGraphCollection) throws Exception;
+  protected abstract GraphCollection<VD, ED, GD> executeInternal(
+    GraphCollection<VD, ED, GD> firstCollection,
+    GraphCollection<VD, ED, GD> secondGraphCollection) throws Exception;
 
   protected static class SubgraphGroupReducer<GD extends GraphData> implements
     GroupReduceFunction<Subgraph<Long, GD>, Subgraph<Long, GD>> {

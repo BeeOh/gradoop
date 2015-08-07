@@ -2,7 +2,7 @@ package org.gradoop.model.impl;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.gradoop.model.EPFlinkTest;
+import org.gradoop.model.FlinkTest;
 import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,11 +11,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitParamsRunner.class)
-public class EPGraphCollectionIntersectTest extends EPFlinkTest {
+public class GraphCollectionIntersectTest extends FlinkTest {
 
-  private EPGraphStore graphStore;
+  private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+    graphStore;
 
-  public EPGraphCollectionIntersectTest() {
+  public GraphCollectionIntersectTest() {
     this.graphStore = createSocialGraph();
   }
 
@@ -24,14 +25,15 @@ public class EPGraphCollectionIntersectTest extends EPFlinkTest {
   public void testIntersect(String firstColl, String secondColl,
     long expectedCollSize, long expectedVertexCount,
     long expectedEdgeCount) throws Exception {
-    EPGraphCollection graphColl = graphStore.getCollection();
-    EPGraphCollection collection1 =
-      graphColl.getGraphs(extractGraphIDs(firstColl));
-    EPGraphCollection collection2 =
-      graphColl.getGraphs(extractGraphIDs(secondColl));
+    GraphCollection<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      graphColl = graphStore.getCollection();
+    GraphCollection<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      collection1 = graphColl.getGraphs(extractGraphIDs(firstColl));
+    GraphCollection<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      collection2 = graphColl.getGraphs(extractGraphIDs(secondColl));
 
-    EPGraphCollection intersectColl =
-      collection1.intersectWithSmall(collection2);
+    GraphCollection<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      intersectColl = collection1.intersectWithSmall(collection2);
 
     assertNotNull("graph collection is null", intersectColl);
     assertEquals("wrong number of graphs", expectedCollSize,

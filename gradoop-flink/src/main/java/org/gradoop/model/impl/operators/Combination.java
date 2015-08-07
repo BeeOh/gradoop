@@ -26,7 +26,7 @@ import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.helper.FlinkConstants;
 import org.gradoop.model.helper.KeySelectors;
-import org.gradoop.model.impl.EPGraph;
+import org.gradoop.model.impl.LogicalGraph;
 
 public class Combination<VD extends VertexData, ED extends EdgeData, GD
   extends GraphData> extends
@@ -38,8 +38,8 @@ public class Combination<VD extends VertexData, ED extends EdgeData, GD
   }
 
   @Override
-  protected EPGraph<VD, ED, GD> executeInternal(EPGraph<VD, ED, GD> firstGraph,
-    EPGraph<VD, ED, GD> secondGraph) {
+  protected LogicalGraph<VD, ED, GD> executeInternal(LogicalGraph<VD, ED, GD> firstGraph,
+    LogicalGraph<VD, ED, GD> secondGraph) {
     final Long newGraphID = FlinkConstants.COMBINE_GRAPH_ID;
 
     Graph<Long, VD, ED> graph1 = firstGraph.getGellyGraph();
@@ -57,7 +57,7 @@ public class Combination<VD extends VertexData, ED extends EdgeData, GD
         .distinct(new KeySelectors.EdgeKeySelector<ED>())
         .map(new EdgeToGraphUpdater<ED>(newGraphID));
 
-    return EPGraph.fromGraph(
+    return LogicalGraph.fromGraph(
       Graph.fromDataSet(newVertexSet, newEdgeSet, graph1.getContext()),
       firstGraph.getGraphDataFactory().createGraphData(newGraphID),
       firstGraph.getVertexDataFactory(), firstGraph.getEdgeDataFactory(),

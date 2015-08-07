@@ -19,11 +19,9 @@ package org.gradoop.model.impl.operators;
 
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
-import org.gradoop.model.GraphDataFactory;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.helper.UnaryFunction;
-import org.gradoop.model.impl.DefaultGraphDataFactory;
-import org.gradoop.model.impl.EPGraph;
+import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.operators.UnaryGraphToGraphOperator;
 
 public class Aggregation<VD extends VertexData, ED extends EdgeData, GD
@@ -31,17 +29,17 @@ public class Aggregation<VD extends VertexData, ED extends EdgeData, GD
   UnaryGraphToGraphOperator<VD, ED, GD> {
 
   private final String aggregatePropertyKey;
-  private final UnaryFunction<EPGraph<VD, ED, GD>, O> aggregationFunc;
+  private final UnaryFunction<LogicalGraph<VD, ED, GD>, O> aggregationFunc;
 
   public Aggregation(final String aggregatePropertyKey,
-    UnaryFunction<EPGraph<VD, ED, GD>, O> aggregationFunc) {
+    UnaryFunction<LogicalGraph<VD, ED, GD>, O> aggregationFunc) {
 
     this.aggregatePropertyKey = aggregatePropertyKey;
     this.aggregationFunc = aggregationFunc;
   }
 
   @Override
-  public EPGraph<VD, ED, GD> execute(EPGraph<VD, ED, GD> graph) throws
+  public LogicalGraph<VD, ED, GD> execute(LogicalGraph<VD, ED, GD> graph) throws
     Exception {
     O result = aggregationFunc.execute(graph);
     // copy graph data before updating properties
@@ -49,7 +47,7 @@ public class Aggregation<VD extends VertexData, ED extends EdgeData, GD
       .createGraphData(graph.getId(), graph.getLabel());
     newGraphData.setProperties(graph.getProperties());
     newGraphData.setProperty(aggregatePropertyKey, result);
-    return EPGraph.fromGraph(graph.getGellyGraph(), newGraphData,
+    return LogicalGraph.fromGraph(graph.getGellyGraph(), newGraphData,
       graph.getVertexDataFactory(), graph.getEdgeDataFactory(),
       graph.getGraphDataFactory());
   }

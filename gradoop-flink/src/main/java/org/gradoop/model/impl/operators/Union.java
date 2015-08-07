@@ -25,17 +25,17 @@ import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.helper.KeySelectors;
-import org.gradoop.model.impl.EPGraphCollection;
-import org.gradoop.model.impl.Subgraph;
+import org.gradoop.model.impl.GraphCollection;
+import org.gradoop.model.helper.Subgraph;
 
 public class Union<VD extends VertexData, ED extends EdgeData, GD extends
   GraphData> extends
   AbstractBinaryCollectionToCollectionOperator<VD, ED, GD> {
 
   @Override
-  protected EPGraphCollection<VD, ED, GD> executeInternal(
-    EPGraphCollection<VD, ED, GD> firstCollection,
-    EPGraphCollection<VD, ED, GD> secondGraphCollection) {
+  protected GraphCollection<VD, ED, GD> executeInternal(
+    GraphCollection<VD, ED, GD> firstCollection,
+    GraphCollection<VD, ED, GD> secondGraphCollection) {
     DataSet<Subgraph<Long, GD>> newSubgraphs =
       firstSubgraphs.union(secondSubgraphs)
         .distinct(new KeySelectors.GraphKeySelector<GD>());
@@ -46,7 +46,7 @@ public class Union<VD extends VertexData, ED extends EdgeData, GD extends
       firstGraph.getEdges().union(secondGraph.getEdges())
         .distinct(new KeySelectors.EdgeKeySelector<ED>());
 
-    return new EPGraphCollection<>(Graph.fromDataSet(vertices, edges, env),
+    return new GraphCollection<>(Graph.fromDataSet(vertices, edges, env),
       newSubgraphs, firstCollection.getVertexDataFactory(),
       firstCollection.getEdgeDataFactory(),
       firstCollection.getGraphDataFactory(), env);

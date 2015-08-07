@@ -15,17 +15,14 @@
  * along with Gradoop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.operators;
+package org.gradoop.model.helper;
 
-import java.util.Collection;
+import org.gradoop.model.EdgeData;
+import org.gradoop.model.VertexData;
 
-public interface EPCollectionOperators<T> {
+public interface PatternGraph {
 
-  <V> Iterable<V> values(Class<V> propertyType, String propertyKey);
+  VertexData getVertex(String variable);
 
-  Collection<T> collect() throws Exception;
-
-  long size() throws Exception;
-
-  void print() throws Exception;
+  EdgeData getEdge(String variable);
 }

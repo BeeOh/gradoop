@@ -18,11 +18,6 @@
 package org.gradoop.io.json;
 
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
-import org.apache.flink.api.java.typeutils.TupleTypeInfo;
-import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.apache.flink.graph.Edge;
 import org.apache.flink.graph.Vertex;
 import org.codehaus.jettison.json.JSONException;
@@ -33,7 +28,7 @@ import org.gradoop.model.GraphData;
 import org.gradoop.model.GraphDataFactory;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.VertexDataFactory;
-import org.gradoop.model.impl.Subgraph;
+import org.gradoop.model.helper.Subgraph;
 
 import java.util.Map;
 import java.util.Set;

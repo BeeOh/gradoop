@@ -25,7 +25,7 @@ import org.apache.flink.util.Collector;
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
-import org.gradoop.model.impl.EPGraph;
+import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.operators.BinaryGraphToGraphOperator;
 
 import java.util.Iterator;
@@ -35,13 +35,13 @@ public abstract class AbstractBinaryGraphToGraphOperator<VD extends
   BinaryGraphToGraphOperator<VD, ED, GD> {
 
   @Override
-  public EPGraph<VD, ED, GD> execute(EPGraph<VD, ED, GD> firstGraph,
-    EPGraph<VD, ED, GD> secondGraph) {
+  public LogicalGraph<VD, ED, GD> execute(LogicalGraph<VD, ED, GD> firstGraph,
+    LogicalGraph<VD, ED, GD> secondGraph) {
     return executeInternal(firstGraph, secondGraph);
   }
 
-  protected abstract EPGraph<VD, ED, GD> executeInternal(
-    EPGraph<VD, ED, GD> firstGraph, EPGraph<VD, ED, GD> secondGraph);
+  protected abstract LogicalGraph<VD, ED, GD> executeInternal(
+    LogicalGraph<VD, ED, GD> firstGraph, LogicalGraph<VD, ED, GD> secondGraph);
 
   /**
    * Used for {@code EPGraph.overlap()} and {@code EPGraph.exclude()}

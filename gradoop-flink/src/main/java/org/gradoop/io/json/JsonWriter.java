@@ -25,7 +25,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
-import org.gradoop.model.impl.Subgraph;
+import org.gradoop.model.helper.Subgraph;
 
 /**
  * Used to convert vertices, edges and graphs into json documents.

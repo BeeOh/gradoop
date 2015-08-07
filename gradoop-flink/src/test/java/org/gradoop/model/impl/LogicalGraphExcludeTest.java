@@ -20,7 +20,7 @@ package org.gradoop.model.impl;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.gradoop.model.EdgeData;
-import org.gradoop.model.EPFlinkTest;
+import org.gradoop.model.FlinkTest;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
@@ -32,27 +32,31 @@ import java.util.Set;
 import static org.junit.Assert.*;
 
 @RunWith(JUnitParamsRunner.class)
-public class EPGraphCombineTest extends EPFlinkTest {
+public class LogicalGraphExcludeTest extends FlinkTest {
 
-  private EPGraphStore graphStore;
+  private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+    graphStore;
 
-  public EPGraphCombineTest() {
+  public LogicalGraphExcludeTest() {
     this.graphStore = createSocialGraph();
   }
 
   @Test
-  @Parameters({"0, 0, 3, 4", "0, 2, 5, 8", // same graph
-    "0, 2, 5, 8", // overlapping
-    "2, 0, 5, 8", // overlapping switched
-    "0, 1, 6, 8", // non-overlapping
-    "1, 0, 6, 8"} // non-overlapping switched
-  )
-  public void testCombine(long firstGraph, long secondGraph,
+  @Parameters({"0, 0, 0, 0", // same graph
+    "0, 2, 1, 0", // overlapping graphs
+    "2, 0, 2, 2", // overlapping graphs switched (different counts)
+    "0, 1, 3, 4", // non-overlapping graphs
+    "1, 0, 3, 4", // non-overlapping graphs switched
+  })
+  public void testExclude(long firstGraph, long secondGraph,
     long expectedVertexCount, long expectedEdgeCount) throws Exception {
-    EPGraph first = graphStore.getGraph(firstGraph);
-    EPGraph second = graphStore.getGraph(secondGraph);
+    LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData> first =
+      graphStore.getGraph(firstGraph);
+    LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData> second =
+      graphStore.getGraph(secondGraph);
 
-    EPGraph result = first.combine(second);
+    LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData> result =
+      first.exclude(second);
 
     assertNotNull("resulting graph was null", result);
 
@@ -63,8 +67,8 @@ public class EPGraphCombineTest extends EPFlinkTest {
     assertEquals("wrong number of edges", expectedEdgeCount,
       result.getEdgeCount());
 
-    Collection<VertexData> vertexData = result.getVertices().collect();
-    Collection<EdgeData> edgeData = result.getEdges().collect();
+    Collection<DefaultVertexData> vertexData = result.getVertices().collect();
+    Collection<DefaultEdgeData> edgeData = result.getEdges().collect();
 
     assertEquals("wrong number of vertex values", expectedVertexCount,
       vertexData.size());
@@ -84,13 +88,16 @@ public class EPGraphCombineTest extends EPFlinkTest {
 
   @Test
   public void testAssignment() throws Exception {
-    EPGraph databaseCommunity = graphStore.getGraph(0L);
-    EPGraph graphCommunity = graphStore.getGraph(1L);
+    LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      databaseCommunity = graphStore.getGraph(0L);
+    LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      hadoopCommunity = graphStore.getGraph(1L);
 
-    EPGraph newGraph = graphCommunity.combine(databaseCommunity);
+    LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      newGraph = databaseCommunity.exclude(hadoopCommunity);
 
-    Collection<VertexData> vertexData = newGraph.getVertices().collect();
-    Collection<EdgeData> edgeData = newGraph.getEdges().collect();
+    Collection<DefaultVertexData> vertexData = newGraph.getVertices().collect();
+    Collection<DefaultEdgeData> edgeData = newGraph.getEdges().collect();
 
     for (VertexData v : vertexData) {
       Set<Long> gIDs = v.getGraphs();
@@ -99,12 +106,6 @@ public class EPGraphCombineTest extends EPFlinkTest {
       } else if (v.equals(bob)) {
         assertEquals("wrong number of graphs", 3, gIDs.size());
       } else if (v.equals(eve)) {
-        assertEquals("wrong number of graphs", 2, gIDs.size());
-      } else if (v.equals(carol)) {
-        assertEquals("wrong number of graphs", 4, gIDs.size());
-      } else if (v.equals(dave)) {
-        assertEquals("wrong number of graphs", 4, gIDs.size());
-      } else if (v.equals(frank)) {
         assertEquals("wrong number of graphs", 2, gIDs.size());
       }
     }
@@ -118,14 +119,6 @@ public class EPGraphCombineTest extends EPFlinkTest {
       } else if (e.equals(edge6)) {
         assertEquals("wrong number of graphs", 2, gIDs.size());
       } else if (e.equals(edge21)) {
-        assertEquals("wrong number of graphs", 2, gIDs.size());
-      } else if (e.equals(edge4)) {
-        assertEquals("wrong number of graphs", 4, gIDs.size());
-      } else if (e.equals(edge5)) {
-        assertEquals("wrong number of graphs", 3, gIDs.size());
-      } else if (e.equals(edge22)) {
-        assertEquals("wrong number of graphs", 2, gIDs.size());
-      } else if (e.equals(edge23)) {
         assertEquals("wrong number of graphs", 2, gIDs.size());
       }
     }

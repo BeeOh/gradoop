@@ -15,12 +15,18 @@
  * along with Gradoop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.operators;
+package org.gradoop.model.impl;
 
-import org.gradoop.model.helper.Predicate;
-import org.gradoop.model.impl.EPEdgeCollection;
+import org.gradoop.model.impl.operators.Summarization;
+import org.gradoop.model.impl.operators.SummarizationCross;
 
-public interface EPEdgeCollectionOperators<T> extends EPCollectionOperators<T> {
-
-  EPEdgeCollection filter(final Predicate<T> predicateFunction);
+public class LogicalGraphSummarizeCrossTest extends LogicalGraphSummarizeTest {
+  @Override
+  public Summarization<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+  getSummarizationImpl(
+    String vertexGroupingKey, boolean useVertexLabel, String edgeGroupingKey,
+    boolean useEdgeLabel) {
+    return new SummarizationCross<>(vertexGroupingKey, edgeGroupingKey,
+      useVertexLabel, useEdgeLabel);
+  }
 }

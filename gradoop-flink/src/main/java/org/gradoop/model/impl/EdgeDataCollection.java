@@ -19,22 +19,20 @@ package org.gradoop.model.impl;
 
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.apache.flink.graph.Edge;
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.helper.Predicate;
-import org.gradoop.model.operators.EPEdgeCollectionOperators;
+import org.gradoop.model.operators.EdgeCollectionOperators;
 
 import java.util.Collection;
 
-public class EPEdgeCollection<ED extends EdgeData> implements
-  EPEdgeCollectionOperators<ED> {
+public class EdgeDataCollection<ED extends EdgeData> implements
+  EdgeCollectionOperators<ED> {
 
   private DataSet<Edge<Long, ED>> edges;
 
-  EPEdgeCollection(DataSet<Edge<Long, ED>> edges) {
+  EdgeDataCollection(DataSet<Edge<Long, ED>> edges) {
     this.edges = edges;
   }
 
@@ -54,8 +52,8 @@ public class EPEdgeCollection<ED extends EdgeData> implements
   }
 
   @Override
-  public EPEdgeCollection<ED> filter(final Predicate<ED> predicateFunction) {
-    return new EPEdgeCollection<>(
+  public EdgeDataCollection<ED> filter(final Predicate<ED> predicateFunction) {
+    return new EdgeDataCollection<>(
       edges.filter(new FilterFunction<Edge<Long, ED>>() {
         @Override
         public boolean filter(Edge<Long, ED> e) throws Exception {

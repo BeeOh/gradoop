@@ -23,22 +23,23 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.graph.Vertex;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.helper.Predicate;
-import org.gradoop.model.operators.EPVertexCollectionOperators;
+import org.gradoop.model.operators.VertexCollectionOperators;
 
 import java.util.Collection;
 
-public class EPVertexCollection<VD extends VertexData> implements
-  EPVertexCollectionOperators<VD> {
+public class VertexDataCollection<VD extends VertexData> implements
+  VertexCollectionOperators<VD> {
 
   private DataSet<Vertex<Long, VD>> vertices;
 
-  EPVertexCollection(DataSet<Vertex<Long, VD>> vertices) {
+  VertexDataCollection(DataSet<Vertex<Long, VD>> vertices) {
     this.vertices = vertices;
   }
 
   @Override
-  public EPVertexCollection<VD> filter(final Predicate<VD> predicateFunction) {
-    return new EPVertexCollection<>(
+  public VertexDataCollection<VD> filter(
+    final Predicate<VD> predicateFunction) {
+    return new VertexDataCollection<>(
       vertices.filter(new FilterFunction<Vertex<Long, VD>>() {
         @Override
         public boolean filter(Vertex<Long, VD> v) throws Exception {

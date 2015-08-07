@@ -27,8 +27,8 @@ import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.helper.KeySelectors;
-import org.gradoop.model.impl.EPGraphCollection;
-import org.gradoop.model.impl.Subgraph;
+import org.gradoop.model.impl.GraphCollection;
+import org.gradoop.model.helper.Subgraph;
 
 import java.util.List;
 
@@ -36,9 +36,9 @@ public class IntersectWithSmall<VD extends VertexData, ED extends EdgeData,
   GD extends GraphData> extends
   AbstractBinaryCollectionToCollectionOperator<VD, ED, GD> {
   @Override
-  protected EPGraphCollection<VD, ED, GD> executeInternal(
-    EPGraphCollection<VD, ED, GD> firstCollection,
-    EPGraphCollection<VD, ED, GD> secondGraphCollection) throws Exception {
+  protected GraphCollection<VD, ED, GD> executeInternal(
+    GraphCollection<VD, ED, GD> firstCollection,
+    GraphCollection<VD, ED, GD> secondGraphCollection) throws Exception {
     final DataSet<Subgraph<Long, GD>> newSubgraphs =
       firstSubgraphs.union(secondSubgraphs)
         .groupBy(new KeySelectors.GraphKeySelector<GD>())
@@ -77,7 +77,7 @@ public class IntersectWithSmall<VD extends VertexData, ED extends EdgeData,
 
     Graph<Long, VD, ED> newGraph = Graph.fromDataSet(vertices, edges, env);
 
-    return new EPGraphCollection<>(newGraph, newSubgraphs,
+    return new GraphCollection<>(newGraph, newSubgraphs,
       firstCollection.getVertexDataFactory(),
       firstCollection.getEdgeDataFactory(),
       firstCollection.getGraphDataFactory(), env);

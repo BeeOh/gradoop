@@ -18,8 +18,7 @@
 package org.gradoop.model.impl;
 
 import junitparams.JUnitParamsRunner;
-import org.gradoop.model.EPFlinkTest;
-import org.gradoop.model.GraphData;
+import org.gradoop.model.FlinkTest;
 import org.gradoop.model.store.EPGraphStore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitParamsRunner.class)
-public class FlinkGraphStoreTest extends EPFlinkTest {
+public class FlinkGraphStoreTest extends FlinkTest {
 
   private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
     graphStore;
@@ -44,7 +43,7 @@ public class FlinkGraphStoreTest extends EPFlinkTest {
 
   @Test
   public void testGetDatabaseGraph() throws Exception {
-    EPGraph dbGraph = graphStore.getDatabaseGraph();
+    LogicalGraph dbGraph = graphStore.getDatabaseGraph();
 
     assertNotNull("database graph was null", dbGraph);
     assertEquals("vertex set has the wrong size", 11,
@@ -65,7 +64,7 @@ public class FlinkGraphStoreTest extends EPFlinkTest {
       graphStore =
       FlinkGraphStore.fromJsonFile(vertexFile, edgeFile, graphFile, env);
 
-    EPGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+    LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
       databaseGraph = graphStore.getDatabaseGraph();
 
     assertEquals("Wrong vertex count", 11, databaseGraph.getVertexCount());

@@ -37,6 +37,7 @@ import org.gradoop.model.VertexDataFactory;
 import org.gradoop.model.helper.KeySelectors;
 import org.gradoop.model.helper.Order;
 import org.gradoop.model.helper.Predicate;
+import org.gradoop.model.helper.Subgraph;
 import org.gradoop.model.impl.operators.Difference;
 import org.gradoop.model.impl.operators.DifferenceWithSmallResult;
 import org.gradoop.model.impl.operators.Intersect;
@@ -44,7 +45,7 @@ import org.gradoop.model.impl.operators.IntersectWithSmall;
 import org.gradoop.model.impl.operators.Union;
 import org.gradoop.model.operators.BinaryCollectionToCollectionOperator;
 import org.gradoop.model.operators.BinaryGraphToGraphOperator;
-import org.gradoop.model.operators.EPGraphCollectionOperators;
+import org.gradoop.model.operators.GraphCollectionOperators;
 import org.gradoop.model.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.operators.UnaryCollectionToGraphOperator;
 import org.gradoop.model.operators.UnaryGraphToGraphOperator;
@@ -62,9 +63,8 @@ import java.util.List;
  * @author Martin Junghanns
  * @author Niklas Teichmann
  */
-public class EPGraphCollection<VD extends VertexData, ED extends EdgeData, GD
-  extends GraphData> implements
-  EPGraphCollectionOperators<VD, ED, GD> {
+public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
+  extends GraphData> implements GraphCollectionOperators<VD, ED, GD> {
 
   private final VertexDataFactory<VD> vertexDataFactory;
 
@@ -78,7 +78,7 @@ public class EPGraphCollection<VD extends VertexData, ED extends EdgeData, GD
 
   private DataSet<Subgraph<Long, GD>> subgraphs;
 
-  public EPGraphCollection(Graph<Long, VD, ED> graph,
+  public GraphCollection(Graph<Long, VD, ED> graph,
     DataSet<Subgraph<Long, GD>> subgraphs,
     VertexDataFactory<VD> vertexDataFactory,
     EdgeDataFactory<ED> edgeDataFactory, GraphDataFactory<GD> graphDataFactory,
@@ -112,7 +112,7 @@ public class EPGraphCollection<VD extends VertexData, ED extends EdgeData, GD
   }
 
   @Override
-  public EPGraph<VD, ED, GD> getGraph(final Long graphID) throws Exception {
+  public LogicalGraph<VD, ED, GD> getGraph(final Long graphID) throws Exception {
     // filter vertices and edges based on given graph id
     Graph<Long, VD, ED> subGraph = this.graph
       .subgraph(new VertexInGraphFilter<VD>(graphID),
@@ -131,19 +131,19 @@ public class EPGraphCollection<VD extends VertexData, ED extends EdgeData, GD
           return g.getValue();
         }
       }).first(1).collect().get(0);
-    return EPGraph
+    return LogicalGraph
       .fromGraph(subGraph, graphData, vertexDataFactory, edgeDataFactory,
         graphDataFactory);
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> getGraphs(
+  public GraphCollection<VD, ED, GD> getGraphs(
     final Long... identifiers) throws Exception {
     return getGraphs(Arrays.asList(identifiers));
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> getGraphs(
+  public GraphCollection<VD, ED, GD> getGraphs(
     final List<Long> identifiers) throws Exception {
 
     DataSet<Subgraph<Long, GD>> newSubGraphs =
@@ -164,7 +164,7 @@ public class EPGraphCollection<VD extends VertexData, ED extends EdgeData, GD
     DataSet<Edge<Long, ED>> edges =
       this.graph.getEdges().filter(new EdgeInGraphsFilter<ED>(identifiers));
 
-    return new EPGraphCollection<>(Graph.fromDataSet(vertices, edges, env),
+    return new GraphCollection<>(Graph.fromDataSet(vertices, edges, env),
       newSubGraphs, vertexDataFactory, edgeDataFactory, graphDataFactory, env);
   }
 
@@ -174,7 +174,7 @@ public class EPGraphCollection<VD extends VertexData, ED extends EdgeData, GD
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> filter(
+  public GraphCollection<VD, ED, GD> filter(
     final Predicate<GD> predicateFunction) throws Exception {
     // find subgraphs matching the predicate
     DataSet<Subgraph<Long, GD>> filteredSubgraphs =
@@ -210,89 +210,89 @@ public class EPGraphCollection<VD extends VertexData, ED extends EdgeData, GD
         }
       });
 
-    return new EPGraphCollection<>(filteredGraph, filteredSubgraphs,
+    return new GraphCollection<>(filteredGraph, filteredSubgraphs,
       vertexDataFactory, edgeDataFactory, graphDataFactory, env);
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> select(
-    Predicate<EPGraph<VD, ED, GD>> predicateFunction) throws Exception {
+  public GraphCollection<VD, ED, GD> select(
+    Predicate<LogicalGraph<VD, ED, GD>> predicateFunction) throws Exception {
     throw new NotImplementedException();
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> union(
-    EPGraphCollection<VD, ED, GD> otherCollection) throws Exception {
+  public GraphCollection<VD, ED, GD> union(
+    GraphCollection<VD, ED, GD> otherCollection) throws Exception {
     return callForCollection(new Union<VD, ED, GD>(), otherCollection);
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> intersect(
-    EPGraphCollection<VD, ED, GD> otherCollection) throws Exception {
+  public GraphCollection<VD, ED, GD> intersect(
+    GraphCollection<VD, ED, GD> otherCollection) throws Exception {
     return callForCollection(new Intersect<VD, ED, GD>(), otherCollection);
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> intersectWithSmall(
-    EPGraphCollection<VD, ED, GD> otherCollection) throws Exception {
+  public GraphCollection<VD, ED, GD> intersectWithSmall(
+    GraphCollection<VD, ED, GD> otherCollection) throws Exception {
     return callForCollection(new IntersectWithSmall<VD, ED, GD>(),
       otherCollection);
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> difference(
-    EPGraphCollection<VD, ED, GD> otherCollection) throws Exception {
+  public GraphCollection<VD, ED, GD> difference(
+    GraphCollection<VD, ED, GD> otherCollection) throws Exception {
     return callForCollection(new Difference<VD, ED, GD>(), otherCollection);
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> differenceWithSmallResult(
-    EPGraphCollection<VD, ED, GD> otherCollection) throws Exception {
+  public GraphCollection<VD, ED, GD> differenceWithSmallResult(
+    GraphCollection<VD, ED, GD> otherCollection) throws Exception {
     return callForCollection(new DifferenceWithSmallResult<VD, ED, GD>(),
       otherCollection);
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> distinct() {
+  public GraphCollection<VD, ED, GD> distinct() {
     throw new NotImplementedException();
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> sortBy(String propertyKey, Order order) {
+  public GraphCollection<VD, ED, GD> sortBy(String propertyKey, Order order) {
     throw new NotImplementedException();
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> top(int limit) {
+  public GraphCollection<VD, ED, GD> top(int limit) {
     throw new NotImplementedException();
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> apply(
+  public GraphCollection<VD, ED, GD> apply(
     UnaryGraphToGraphOperator<VD, ED, GD> op) {
     throw new NotImplementedException();
   }
 
   @Override
-  public EPGraph<VD, ED, GD> reduce(BinaryGraphToGraphOperator<VD, ED, GD> op) {
+  public LogicalGraph<VD, ED, GD> reduce(BinaryGraphToGraphOperator<VD, ED, GD> op) {
     throw new NotImplementedException();
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> callForCollection(
+  public GraphCollection<VD, ED, GD> callForCollection(
     UnaryCollectionToCollectionOperator<VD, ED, GD> op) {
     return op.execute(this);
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> callForCollection(
+  public GraphCollection<VD, ED, GD> callForCollection(
     BinaryCollectionToCollectionOperator<VD, ED, GD> op,
-    EPGraphCollection<VD, ED, GD> otherCollection) throws Exception {
+    GraphCollection<VD, ED, GD> otherCollection) throws Exception {
     return op.execute(this, otherCollection);
   }
 
   @Override
-  public EPGraph<VD, ED, GD> callForGraph(
+  public LogicalGraph<VD, ED, GD> callForGraph(
     UnaryCollectionToGraphOperator<VD, ED, GD> op) {
     return op.execute(this);
   }
@@ -335,8 +335,8 @@ public class EPGraphCollection<VD extends VertexData, ED extends EdgeData, GD
     subgraphs.print();
   }
 
-  EPGraph<VD, ED, GD> getGraph() {
-    return EPGraph
+  LogicalGraph<VD, ED, GD> getGraph() {
+    return LogicalGraph
       .fromGraph(this.graph, null, vertexDataFactory, edgeDataFactory,
         graphDataFactory);
   }

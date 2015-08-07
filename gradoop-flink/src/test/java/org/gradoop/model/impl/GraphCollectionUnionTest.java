@@ -2,7 +2,7 @@ package org.gradoop.model.impl;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.gradoop.model.EPFlinkTest;
+import org.gradoop.model.FlinkTest;
 import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,10 +11,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitParamsRunner.class)
-public class EPGraphCollectionUnionTest extends EPFlinkTest {
-  private EPGraphStore graphStore;
+public class GraphCollectionUnionTest extends FlinkTest {
+  private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+    graphStore;
 
-  public EPGraphCollectionUnionTest() {
+  public GraphCollectionUnionTest() {
     this.graphStore = createSocialGraph();
   }
 
@@ -23,14 +24,16 @@ public class EPGraphCollectionUnionTest extends EPFlinkTest {
   public void testUnion(String firstColl, String secondColl,
     long expectedCollSize, long expectedVertexCount,
     long expectedEdgeCount) throws Exception {
-    EPGraphCollection graphColl = graphStore.getCollection();
+    GraphCollection<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      graphColl = graphStore.getCollection();
 
-    EPGraphCollection collection1 =
-      graphColl.getGraphs(extractGraphIDs(firstColl));
-    EPGraphCollection collection2 =
-      graphColl.getGraphs(extractGraphIDs(secondColl));
+    GraphCollection<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      collection1 = graphColl.getGraphs(extractGraphIDs(firstColl));
+    GraphCollection<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      collection2 = graphColl.getGraphs(extractGraphIDs(secondColl));
 
-    EPGraphCollection unionColl = collection1.union(collection2);
+    GraphCollection<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      unionColl = collection1.union(collection2);
 
     assertNotNull("graph collection is null", unionColl);
     assertEquals("wrong number of graphs", expectedCollSize, unionColl.size());

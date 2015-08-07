@@ -41,7 +41,7 @@ import org.gradoop.model.VertexData;
 import org.gradoop.model.VertexDataFactory;
 import org.gradoop.model.helper.FlinkConstants;
 import org.gradoop.model.helper.KeySelectors;
-import org.gradoop.model.impl.EPGraph;
+import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.operators.UnaryGraphToGraphOperator;
 
 /**
@@ -117,8 +117,8 @@ public abstract class Summarization<VD extends VertexData, ED extends
   }
 
   @Override
-  public EPGraph<VD, ED, GD> execute(EPGraph<VD, ED, GD> graph) {
-    EPGraph<VD, ED, GD> result;
+  public LogicalGraph<VD, ED, GD> execute(LogicalGraph<VD, ED, GD> graph) {
+    LogicalGraph<VD, ED, GD> result;
     Graph<Long, VD, ED> gellyGraph;
 
     vertexDataFactory = graph.getVertexDataFactory();
@@ -132,8 +132,9 @@ public abstract class Summarization<VD extends VertexData, ED extends
     } else {
       GD GD = createNewGraphData();
       gellyGraph = summarizeInternal(graph.getGellyGraph());
-      result = EPGraph.fromGraph(gellyGraph, GD, graph.getVertexDataFactory(),
-        graph.getEdgeDataFactory(), graph.getGraphDataFactory());
+      result = LogicalGraph
+        .fromGraph(gellyGraph, GD, graph.getVertexDataFactory(),
+          graph.getEdgeDataFactory(), graph.getGraphDataFactory());
     }
     return result;
   }

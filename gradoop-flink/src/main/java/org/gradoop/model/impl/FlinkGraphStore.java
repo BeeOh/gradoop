@@ -37,8 +37,8 @@ import org.gradoop.model.GraphDataFactory;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.VertexDataFactory;
 import org.gradoop.model.helper.FlinkConstants;
+import org.gradoop.model.helper.Subgraph;
 import org.gradoop.model.store.EPGraphStore;
-import sun.jvmstat.perfdata.monitor.v1_0.BasicType;
 
 import java.util.Collection;
 
@@ -57,7 +57,7 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
   /**
    * Database graph representing the vertex and edge space.
    */
-  private EPGraphCollection<VD, ED, GD> database;
+  private GraphCollection<VD, ED, GD> database;
 
   /**
    * Flink execution environment.
@@ -73,7 +73,7 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
     this.edgeDataFactory = edgeDataFactory;
     this.graphDataFactory = graphDataFactory;
     this.database =
-      new EPGraphCollection<>(Graph.fromDataSet(vertices, edges, env), graphs,
+      new GraphCollection<>(Graph.fromDataSet(vertices, edges, env), graphs,
         vertexDataFactory, edgeDataFactory, graphDataFactory, env);
     this.env = env;
     this.databaseData =
@@ -223,18 +223,19 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
   }
 
   @Override
-  public EPGraph<VD, ED, GD> getDatabaseGraph() {
-    return EPGraph.fromGraph(database.getGraph().getGellyGraph(), databaseData,
-      vertexDataFactory, edgeDataFactory, graphDataFactory);
+  public LogicalGraph<VD, ED, GD> getDatabaseGraph() {
+    return LogicalGraph
+      .fromGraph(database.getGraph().getGellyGraph(), databaseData,
+        vertexDataFactory, edgeDataFactory, graphDataFactory);
   }
 
   @Override
-  public EPGraphCollection<VD, ED, GD> getCollection() {
+  public GraphCollection<VD, ED, GD> getCollection() {
     return database;
   }
 
   @Override
-  public EPGraph<VD, ED, GD> getGraph(Long graphID) throws Exception {
+  public LogicalGraph<VD, ED, GD> getGraph(Long graphID) throws Exception {
     return database.getGraph(graphID);
   }
 

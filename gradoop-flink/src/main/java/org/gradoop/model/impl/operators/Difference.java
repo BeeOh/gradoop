@@ -30,8 +30,8 @@ import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.helper.KeySelectors;
-import org.gradoop.model.impl.EPGraphCollection;
-import org.gradoop.model.impl.Subgraph;
+import org.gradoop.model.impl.GraphCollection;
+import org.gradoop.model.helper.Subgraph;
 
 import java.util.Iterator;
 
@@ -39,9 +39,9 @@ public class Difference<VD extends VertexData, ED extends EdgeData, GD
   extends GraphData> extends
   AbstractBinaryCollectionToCollectionOperator<VD, ED, GD> {
   @Override
-  protected EPGraphCollection<VD, ED, GD> executeInternal(
-    EPGraphCollection<VD, ED, GD> firstCollection,
-    EPGraphCollection<VD, ED, GD> secondGraphCollection) throws Exception {
+  protected GraphCollection<VD, ED, GD> executeInternal(
+    GraphCollection<VD, ED, GD> firstCollection,
+    GraphCollection<VD, ED, GD> secondGraphCollection) throws Exception {
     DataSet<Tuple2<Subgraph<Long, GD>, Long>> thisGraphs =
       firstSubgraphs.map(new Tuple2LongMapper<Subgraph<Long, GD>>(1l));
 
@@ -113,7 +113,7 @@ public class Difference<VD extends VertexData, ED extends EdgeData, GD
       .with(new EdgeJoinFunction<VD, ED>())
       .distinct(new KeySelectors.EdgeKeySelector<ED>());
 
-    return new EPGraphCollection<>(Graph.fromDataSet(vertices, edges, env),
+    return new GraphCollection<>(Graph.fromDataSet(vertices, edges, env),
       newSubgraphs, firstCollection.getVertexDataFactory(),
       firstCollection.getEdgeDataFactory(),
       firstCollection.getGraphDataFactory(), env);

@@ -19,7 +19,7 @@ package org.gradoop.model.impl;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.gradoop.model.EPFlinkTest;
+import org.gradoop.model.FlinkTest;
 import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,10 +28,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitParamsRunner.class)
-public class EPGraphGetElementsTest extends EPFlinkTest {
+public class LogicalGraphGetElementsTest extends FlinkTest {
   private EPGraphStore graphStore;
 
-  public EPGraphGetElementsTest() {
+  public LogicalGraphGetElementsTest() {
     this.graphStore = createSocialGraph();
   }
 
@@ -39,7 +39,7 @@ public class EPGraphGetElementsTest extends EPFlinkTest {
   @Parameters({"-1, 11", "0, 3", "1, 3", "2, 4", "3, 3"})
   public void testGetVertices(long graphID, long expectedVertexCount) throws
     Exception {
-    EPGraph g = (graphID == -1) ? graphStore.getDatabaseGraph() :
+    LogicalGraph g = (graphID == -1) ? graphStore.getDatabaseGraph() :
       graphStore.getGraph(graphID);
 
     assertNotNull("graph was null", g);
@@ -53,7 +53,7 @@ public class EPGraphGetElementsTest extends EPFlinkTest {
   @Parameters({"-1, 24", "0, 4", "1, 4", "2, 6", "3, 4"})
   public void testGetEdges(long graphID, long expectedEdgeCount) throws
     Exception {
-    EPGraph g = (graphID == -1) ? graphStore.getDatabaseGraph() :
+    LogicalGraph g = (graphID == -1) ? graphStore.getDatabaseGraph() :
       graphStore.getGraph(graphID);
 
     assertNotNull("graph was null", g);
@@ -72,11 +72,11 @@ public class EPGraphGetElementsTest extends EPFlinkTest {
   public void testGetOutgoingAndIncomingEdges(long graphID, long vertexID,
     long expectedOutgoingEdgeCount, long expectedIncomingEdgeCount) throws
     Exception {
-    EPGraph g = (graphID == -1) ? graphStore.getDatabaseGraph() :
+    LogicalGraph g = (graphID == -1) ? graphStore.getDatabaseGraph() :
       graphStore.getGraph(graphID);
 
-    EPEdgeCollection outgoingEdges = g.getOutgoingEdges(vertexID);
-    EPEdgeCollection incomingEdges = g.getIncomingEdges(vertexID);
+    EdgeDataCollection outgoingEdges = g.getOutgoingEdges(vertexID);
+    EdgeDataCollection incomingEdges = g.getIncomingEdges(vertexID);
 
     assertNotNull("outgoing edge collection was null", outgoingEdges);
     assertNotNull("incoming edge collection was null", incomingEdges);

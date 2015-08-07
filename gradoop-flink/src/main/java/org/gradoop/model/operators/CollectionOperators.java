@@ -15,10 +15,17 @@
  * along with Gradoop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.helper;
+package org.gradoop.model.operators;
 
-public interface BinaryFunction<I, O> {
+import java.util.Collection;
 
-  O execute(I first, I second);
+public interface CollectionOperators<T> {
 
+  <V> Iterable<V> values(Class<V> propertyType, String propertyKey);
+
+  Collection<T> collect() throws Exception;
+
+  long size() throws Exception;
+
+  void print() throws Exception;
 }

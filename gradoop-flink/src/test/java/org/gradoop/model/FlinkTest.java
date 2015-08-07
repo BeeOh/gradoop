@@ -34,7 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-public abstract class EPFlinkTest {
+public abstract class FlinkTest {
 
   protected static final String LABEL_COMMUNITY = "Community";
   protected static final String LABEL_PERSON = "Person";
