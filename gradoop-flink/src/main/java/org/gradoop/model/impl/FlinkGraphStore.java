@@ -121,11 +121,11 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
 
     TypeInformation<Edge<Long, ED>> edgeTypeInfo =
       new TupleTypeInfo(Edge.class, BasicTypeInfo.LONG_TYPE_INFO,
+        BasicTypeInfo.LONG_TYPE_INFO,
         TypeExtractor.createTypeInfo(edgeDataFactory.getType()));
 
     TypeInformation<Subgraph<Long, GD>> graphTypeInfo =
       new TupleTypeInfo(Subgraph.class, BasicTypeInfo.LONG_TYPE_INFO,
-        BasicTypeInfo.LONG_TYPE_INFO,
         TypeExtractor.createTypeInfo(graphDataFactory.getType()));
 
     DataSet<Vertex<Long, VD>> vertices = env.readTextFile(vertexFile)
