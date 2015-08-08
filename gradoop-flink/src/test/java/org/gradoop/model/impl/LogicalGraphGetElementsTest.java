@@ -20,7 +20,6 @@ package org.gradoop.model.impl;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.gradoop.model.FlinkTest;
-import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -29,7 +28,7 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitParamsRunner.class)
 public class LogicalGraphGetElementsTest extends FlinkTest {
-  private EPGraphStore graphStore;
+  private EPGMDatabase graphStore;
 
   public LogicalGraphGetElementsTest() {
     this.graphStore = createSocialGraph();

@@ -15,17 +15,7 @@
  * along with Gradoop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.operators;
-
-import java.util.Collection;
-
-public interface CollectionOperators<T> {
-
-  <V> Iterable<V> values(Class<V> propertyType, String propertyKey);
-
-  Collection<T> collect() throws Exception;
-
-  long size() throws Exception;
-
-  void print() throws Exception;
-}
+/**
+ * Contains all classes related to json input and output to Flink.
+ */
+package org.gradoop.io.json;

@@ -17,29 +17,28 @@
 
 package org.gradoop.model;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.gradoop.model.helper.Order;
-import org.gradoop.model.helper.PatternGraph;
 import org.gradoop.model.helper.Predicate;
 import org.gradoop.model.helper.UnaryFunction;
 import org.gradoop.model.impl.DefaultEdgeData;
 import org.gradoop.model.impl.DefaultGraphData;
 import org.gradoop.model.impl.DefaultVertexData;
-import org.gradoop.model.impl.LogicalGraph;
+import org.gradoop.model.impl.EPGMDatabase;
 import org.gradoop.model.impl.GraphCollection;
+import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.impl.operators.Aggregation;
 import org.gradoop.model.impl.operators.Combination;
 import org.gradoop.model.impl.operators.Projection;
 import org.gradoop.model.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.operators.UnaryGraphToCollectionOperator;
-import org.gradoop.model.store.EPGraphStore;
 import org.mockito.Mockito;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @SuppressWarnings({"unchecked", "UnusedAssignment"})
 public abstract class WorkflowTest {
 
   public void summarizedCommunities() throws Exception {
-    EPGraphStore db = Mockito.mock(EPGraphStore.class);
+    EPGMDatabase db = Mockito.mock(EPGMDatabase.class);
 
     // read full graph from database
     LogicalGraph dbGraph = db.getDatabaseGraph();
@@ -69,7 +68,7 @@ public abstract class WorkflowTest {
   }
 
   public void topRevenueBusinessProcess() throws Exception {
-    EPGraphStore db = Mockito.mock(EPGraphStore.class);
+    EPGMDatabase db = Mockito.mock(EPGMDatabase.class);
 
     // read full graph from database
     LogicalGraph dbGraph = db.getDatabaseGraph();
@@ -92,13 +91,14 @@ public abstract class WorkflowTest {
 
     // define aggregate function (revenue per graph)
     final UnaryFunction<LogicalGraph<DefaultVertexData, DefaultEdgeData,
-          DefaultGraphData>, Double>
+      DefaultGraphData>, Double>
       aggregateFunc = null;
     new UnaryFunction<LogicalGraph<DefaultVertexData, DefaultEdgeData,
-          DefaultGraphData>, Double>() {
+      DefaultGraphData>, Double>() {
       @Override
       public Double execute(
-        LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData> entity) {
+        LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+          entity) {
         Double sum = 0.0;
         for (Double v : entity.getVertices().values(Double.class, "revenue")) {
           sum += v;
@@ -120,7 +120,7 @@ public abstract class WorkflowTest {
   }
 
   public void clusterCharacteristicPatterns() throws Exception {
-    EPGraphStore db = Mockito.mock(EPGraphStore.class);
+    EPGMDatabase db = Mockito.mock(EPGMDatabase.class);
 
     // generate base collection
     GraphCollection btgs = db.getDatabaseGraph()
@@ -139,13 +139,14 @@ public abstract class WorkflowTest {
 
     // define aggregate function (profit per graph)
     final UnaryFunction<LogicalGraph<DefaultVertexData, DefaultEdgeData,
-          DefaultGraphData>, Double>
+      DefaultGraphData>, Double>
       aggFunc = null;
     new UnaryFunction<LogicalGraph<DefaultVertexData, DefaultEdgeData,
-          DefaultGraphData>, Double>() {
+      DefaultGraphData>, Double>() {
       @Override
       public Double execute(
-        LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData> entity) {
+        LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+          entity) {
         Double revenue = 0.0;
         Double expense = 0.0;
         for (Double v : entity.getVertices().values(Double.class, "revenue")) {
@@ -206,8 +207,7 @@ public abstract class WorkflowTest {
 
     // determine cluster characteristic patterns
     GraphCollection trivialPats = profitFreqPats.intersect(lossFreqPats);
-    GraphCollection profitCharPatterns =
-      profitFreqPats.difference(trivialPats);
+    GraphCollection profitCharPatterns = profitFreqPats.difference(trivialPats);
     GraphCollection lossCharPatterns = lossFreqPats.difference(trivialPats);
   }
 
@@ -263,5 +263,12 @@ public abstract class WorkflowTest {
     public String getName() {
       return "BTGComputation";
     }
+  }
+
+  private interface PatternGraph {
+
+    VertexData getVertex(String variable);
+
+    EdgeData getEdge(String variable);
   }
 }

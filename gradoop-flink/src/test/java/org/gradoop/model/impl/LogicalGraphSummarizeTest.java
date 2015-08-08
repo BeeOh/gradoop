@@ -17,19 +17,19 @@
 
 package org.gradoop.model.impl;
 
-import org.gradoop.model.FlinkTest;
+import org.gradoop.GConstants;
 import org.gradoop.model.EdgeData;
+import org.gradoop.model.FlinkTest;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.helper.FlinkConstants;
 import org.gradoop.model.impl.operators.Summarization;
-import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
 
 import static org.gradoop.model.impl.operators.Summarization.NULL_VALUE;
 import static org.junit.Assert.*;
 
 public abstract class LogicalGraphSummarizeTest extends FlinkTest {
-  private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+  private EPGMDatabase<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
     graphStore;
 
   public LogicalGraphSummarizeTest() {
@@ -45,8 +45,7 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   public void testSummarizeOnVertexPropertySymmetricGraph() throws Exception {
 
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(2L);
+      inputGraph = graphStore.getGraph(2L);
 
     final String vertexGroupingKey = "city";
     final String aggregatePropertyKey = "count";
@@ -71,11 +70,11 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
       assertNotNull("vertex id must not be null", v.getId());
 
       if (v.getId().equals(vertexIDLeipzig)) {
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           "Leipzig", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (v.getId().equals(vertexIDDresden)) {
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           "Dresden", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -96,22 +95,22 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(0L)) {
         // [0] Leipzig -[__EDGE__]-> Leipzig {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDLeipzig, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(2L)) {
         // [2] Leipzig -[__EDGE__]-> Dresden {count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDDresden, aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(3L)) {
         // [3] Dresden -[__EDGE__]-> Leipzig {count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDLeipzig, aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(4L)) {
         // [4] Dresden -[__EDGE__]-> Dresden {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDDresden, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -124,9 +123,8 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   public void testSummarizeOnVertexProperty() throws Exception {
 
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
-        .combine(graphStore.getGraph(2L));
+      inputGraph = graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
+      .combine(graphStore.getGraph(2L));
 
     final String vertexGroupingKey = "city";
     final String aggregatePropertyKey = "count";
@@ -150,15 +148,15 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
       assertNotNull("vertex id must not be null", v.getId());
 
       if (v.getId().equals(vertexIDLeipzig)) {
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           "Leipzig", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (v.getId().equals(vertexIDDresden)) {
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           "Dresden", aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (v.getId().equals(vertexIDBerlin)) {
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           "Berlin", aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -182,27 +180,27 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(4L)) {
         // [4] Dresden -[__EDGE__]-> Dresden {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDDresden, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(3L)) {
         // [3] Dresden -[__EDGE__]-> Leipzig {count: 3}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDLeipzig, aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(0L)) {
         // [0] Leipzig -[__EDGE__]-> Leipzig {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDLeipzig, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(2L)) {
         // [2] Leipzig -[__EDGE__]-> Dresden {count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDDresden, aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(22L)) {
         // [22] Berlin  -[__EDGE__]-> Dresden {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
           vertexIDDresden, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -214,8 +212,7 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   @Test
   public void testSummarizeOnVertexPropertyWithAbsentValue() throws Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(3L);
+      inputGraph = graphStore.getGraph(3L);
 
     final String vertexGroupingKey = "city";
     final String aggregatePropertyKey = "count";
@@ -239,12 +236,12 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (v.getId().equals(vertexIDDresden)) {
         // 2 __VERTEX__ {city: "Dresden", count: 2}
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           "Dresden", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (v.getId().equals(vertexIDGraphProcessingForum)) {
         // 10 __VERTEX__ {city: "__DEFAULT_GROUP", count: 1}
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           NULL_VALUE, aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       }
@@ -261,12 +258,12 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(16L)) {
         // Default -[__EDGE__]-> Dresden {count: 3}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL,
-          vertexIDGraphProcessingForum, vertexIDDresden, aggregatePropertyKey,
-          3, 1, FlinkConstants.SUMMARIZE_GRAPH_ID);
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDGraphProcessingForum,
+          vertexIDDresden, aggregatePropertyKey, 3, 1,
+          FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(4L)) {
         // Dresden -[__EDGE__]-> Dresden {count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDDresden, aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -278,9 +275,8 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   @Test
   public void testSummarizeOnVertexAndEdgeProperty() throws Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
-        .combine(graphStore.getGraph(2L));
+      inputGraph = graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
+      .combine(graphStore.getGraph(2L));
 
     final String vertexGroupingKey = "city";
     final String edgeGroupingKey = "since";
@@ -305,15 +301,15 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
       assertNotNull("vertex id must not be null", v.getId());
 
       if (v.getId().equals(vertexIDLeipzig)) {
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           "Leipzig", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (v.getId().equals(vertexIDDresden)) {
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           "Dresden", aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (v.getId().equals(vertexIDBerlin)) {
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           "Berlin", aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -338,32 +334,32 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(4L)) {
         // [4] Dresden -[__EDGE__]-> Dresden {since: 2014, count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDDresden, edgeGroupingKey, "2014", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(3L)) {
         // [3] Dresden -[__EDGE__]-> Leipzig {since: 2013, count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDLeipzig, edgeGroupingKey, "2013", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(21L)) {
         // [21] Dresden -[__EDGE__]-> Leipzig {since: 2015, count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDLeipzig, edgeGroupingKey, "2015", aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(0L)) {
         // [0] Leipzig -[__EDGE__]-> Leipzig {since: 2014, count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDLeipzig, edgeGroupingKey, "2014", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(2L)) {
         // [2] Leipzig -[__EDGE__]-> Dresden {since: 2013, count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDDresden, edgeGroupingKey, "2013", aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(22L)) {
         // [22] Berlin  -[__EDGE__]-> Dresden {since: 2015, count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
           vertexIDDresden, edgeGroupingKey, "2015", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -376,8 +372,7 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   public void testSummarizeOnVertexAndEdgePropertyWithAbsentValues() throws
     Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(3L);
+      inputGraph = graphStore.getGraph(3L);
 
     final String vertexGroupingKey = "city";
     final String edgeGroupingKey = "since";
@@ -402,12 +397,12 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (v.getId().equals(vertexIDDresden)) {
         // 2 __VERTEX__ {city: "Dresden", count: 2}
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           "Dresden", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (v.getId().equals(vertexIDGraphProcessingForum)) {
         // 10 __VERTEX__ {city: "__DEFAULT_GROUP", count: 1}
-        testVertex(v, FlinkConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
+        testVertex(v, GConstants.DEFAULT_VERTEX_LABEL, vertexGroupingKey,
           NULL_VALUE, aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       }
@@ -425,19 +420,17 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(16L)) {
         // [16] Default -[__EDGE__]-> Dresden {since: 2013, count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL,
-          vertexIDGraphProcessingForum, vertexIDDresden, edgeGroupingKey,
-          "2013", aggregatePropertyKey, 1, 1,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDGraphProcessingForum,
+          vertexIDDresden, edgeGroupingKey, "2013", aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(19L)) {
         // [19] Default -[__EDGE__]-> Dresden {since: NULL, count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL,
-          vertexIDGraphProcessingForum, vertexIDDresden, edgeGroupingKey,
-          NULL_VALUE, aggregatePropertyKey, 2, 1,
-          FlinkConstants.SUMMARIZE_GRAPH_ID);
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDGraphProcessingForum,
+          vertexIDDresden, edgeGroupingKey, NULL_VALUE, aggregatePropertyKey, 2,
+          1, FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(4L)) {
         // [4] Dresden -[__EDGE__]-> Dresden {since: 2014, count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDDresden, edgeGroupingKey, "2014", aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -449,8 +442,7 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   @Test
   public void testSummarizeOnVertexLabel() throws Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getDatabaseGraph();
+      inputGraph = graphStore.getDatabaseGraph();
 
     final String aggregatePropertyKey = "count";
 
@@ -504,22 +496,20 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(0L)) {
         // [0] Person -[__EDGE__]-> Person {count: 10}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
           vertexIDPerson, aggregatePropertyKey, 10, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(7L)) {
         // [7] Person -[__EDGE__]-> Tag {count: 4}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
-          vertexIDTag, aggregatePropertyKey, 4, 1,
-          FlinkConstants.SUMMARIZE_GRAPH_ID);
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDPerson, vertexIDTag,
+          aggregatePropertyKey, 4, 1, FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(11L)) {
         // [11] Forum -[__EDGE__]-> Tag {count: 4}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
-          vertexIDTag, aggregatePropertyKey, 4, 1,
-          FlinkConstants.SUMMARIZE_GRAPH_ID);
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDForum, vertexIDTag,
+          aggregatePropertyKey, 4, 1, FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(15L)) {
         // [15] Forum -[__EDGE__]-> Person {count: 6}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
           vertexIDPerson, aggregatePropertyKey, 6, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -531,9 +521,8 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   @Test
   public void testSummarizeOnVertexLabelAndVertexProperty() throws Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
-        .combine(graphStore.getGraph(2L));
+      inputGraph = graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
+      .combine(graphStore.getGraph(2L));
 
     final String vertexGroupingKey = "city";
     final String aggregatePropertyKey = "count";
@@ -586,27 +575,27 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(4L)) {
         // [4] Dresden -[__EDGE__]-> Dresden {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDDresden, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(3L)) {
         // [3] Dresden -[__EDGE__]-> Leipzig {count: 3}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDLeipzig, aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(0L)) {
         // [0] Leipzig -[__EDGE__]-> Leipzig {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDLeipzig, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(2L)) {
         // [2] Leipzig -[__EDGE__]-> Dresden {count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDDresden, aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(22L)) {
         // [22] Berlin  -[__EDGE__]-> Dresden {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
           vertexIDDresden, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -620,8 +609,7 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
     throws
     Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getDatabaseGraph();
+      inputGraph = graphStore.getDatabaseGraph();
 
     final String vertexGroupingKey = "city";
     final String aggregatePropertyKey = "count";
@@ -689,59 +677,55 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(4L)) {
         // [4] Dresden -[__EDGE__]-> Dresden {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDDresden, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(3L)) {
         // [3] Dresden -[__EDGE__]-> Leipzig {count: 3}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDLeipzig, aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(0L)) {
         // [0] Leipzig -[__EDGE__]-> Leipzig {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDLeipzig, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(2L)) {
         // [2] Leipzig -[__EDGE__]-> Dresden {count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDDresden, aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(22L)) {
         // [22] Berlin  -[__EDGE__]-> Dresden {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
           vertexIDDresden, aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(16L)) {
         // [16] Forum -[__EDGE__]-> Dresden {count: 3}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
           vertexIDDresden, aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(11L)) {
         // [11] Forum -[__EDGE__]-> Tag {count: 4}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
-          vertexIDTag, aggregatePropertyKey, 4, 1,
-          FlinkConstants.SUMMARIZE_GRAPH_ID);
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDForum, vertexIDTag,
+          aggregatePropertyKey, 4, 1, FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(15L)) {
         // [15] Forum -[__EDGE__]-> Leipzig {count: 3}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
           vertexIDLeipzig, aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(10L)) {
         // [10] Berlin-[__EDGE__]-> Tag {count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
-          vertexIDTag, aggregatePropertyKey, 1, 1,
-          FlinkConstants.SUMMARIZE_GRAPH_ID);
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin, vertexIDTag,
+          aggregatePropertyKey, 1, 1, FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(7L)) {
         // [7] Dresden-[__EDGE__]-> Tag {count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
-          vertexIDTag, aggregatePropertyKey, 2, 1,
-          FlinkConstants.SUMMARIZE_GRAPH_ID);
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden, vertexIDTag,
+          aggregatePropertyKey, 2, 1, FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(8L)) {
         // [8] Leipzig-[__EDGE__]-> Tag {count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
-          vertexIDTag, aggregatePropertyKey, 1, 1,
-          FlinkConstants.SUMMARIZE_GRAPH_ID);
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig, vertexIDTag,
+          aggregatePropertyKey, 1, 1, FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
         assertTrue("unexpected edge: " + e.getId(), false);
       }
@@ -751,9 +735,8 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   @Test
   public void testSummarizeOnVertexLabelAndEdgeProperty() throws Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
-        .combine(graphStore.getGraph(2L));
+      inputGraph = graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
+      .combine(graphStore.getGraph(2L));
 
     final String edgeGroupingKey = "since";
     final String aggregatePropertyKey = "count";
@@ -794,17 +777,17 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(0L)) {
         // [0] Person -[__EDGE__]-> Person {since: 2014, count: 4}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
           vertexIDPerson, edgeGroupingKey, "2014", aggregatePropertyKey, 4, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(2L)) {
         // [2] Person -[__EDGE__]-> Person {since: 2013, count: 3}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
           vertexIDPerson, edgeGroupingKey, "2013", aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(21L)) {
         // [21] Person -[__EDGE__]-> Person {since: 2015, count: 3}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
           vertexIDPerson, edgeGroupingKey, "2015", aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -817,8 +800,7 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   public void testSummarizeOnVertexLabelAndEdgePropertyWithAbsentValue() throws
     Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getDatabaseGraph();
+      inputGraph = graphStore.getDatabaseGraph();
 
     final String edgeGroupingKey = "since";
     final String aggregatePropertyKey = "count";
@@ -872,37 +854,37 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(0L)) {
         // [0] Person -[__EDGE__]-> Person {since: 2014, count: 4}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
           vertexIDPerson, edgeGroupingKey, "2014", aggregatePropertyKey, 4, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(2L)) {
         // [2] Person -[__EDGE__]-> Person {since: 2013, count: 3}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
           vertexIDPerson, edgeGroupingKey, "2013", aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(21L)) {
         // [21] Person -[__EDGE__]-> Person {since: 2015, count: 3}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
           vertexIDPerson, edgeGroupingKey, "2015", aggregatePropertyKey, 3, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(7L)) {
         // [7] Person -[__EDGE__]-> Tag {since: __NULL, count: 4}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDPerson,
-          vertexIDTag, edgeGroupingKey, NULL_VALUE, aggregatePropertyKey, 4, 1,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDPerson, vertexIDTag,
+          edgeGroupingKey, NULL_VALUE, aggregatePropertyKey, 4, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(11L)) {
         // [11] Forum -[__EDGE__]-> Tag {since: __NULL, count: 4}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
-          vertexIDTag, edgeGroupingKey, NULL_VALUE, aggregatePropertyKey, 4, 1,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDForum, vertexIDTag,
+          edgeGroupingKey, NULL_VALUE, aggregatePropertyKey, 4, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(15L)) {
         // [15] Forum -[__EDGE__]-> Person {since: __NULL, count: 5}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
           vertexIDPerson, edgeGroupingKey, NULL_VALUE, aggregatePropertyKey, 5,
           1, FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(16L)) {
         // [16] Forum -[__EDGE__]-> Person {since: 2013, count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDForum,
           vertexIDPerson, edgeGroupingKey, "2013", aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -915,9 +897,8 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   public void testSummarizeOnVertexLabelAndVertexAndEdgeProperty() throws
     Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
-        .combine(graphStore.getGraph(2L));
+      inputGraph = graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
+      .combine(graphStore.getGraph(2L));
 
     final String vertexGroupingKey = "city";
     final String edgeGroupingKey = "since";
@@ -972,32 +953,32 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
 
       if (e.getId().equals(4L)) {
         // [4] Dresden -[__EDGE__]-> Dresden {since: "2014", count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDDresden, edgeGroupingKey, "2014", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(3L)) {
         // [3] Dresden -[__EDGE__]-> Leipzig {since: "2013", count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDLeipzig, edgeGroupingKey, "2013", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(21L)) {
         // [21] Dresden -[__EDGE__]-> Leipzig {since: "2015", count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDDresden,
           vertexIDLeipzig, edgeGroupingKey, "2015", aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(0L)) {
         // [0] Leipzig -[__EDGE__]-> Leipzig {since: "2014", count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDLeipzig, edgeGroupingKey, "2014", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(2L)) {
         // [2] Leipzig -[__EDGE__]-> Dresden {since: "2013", count: 1}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDLeipzig,
           vertexIDDresden, edgeGroupingKey, "2013", aggregatePropertyKey, 1, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else if (e.getId().equals(22L)) {
         // [22] Berlin  -[__EDGE__]-> Dresden {since: "2015", count: 2}
-        testEdge(e, FlinkConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
+        testEdge(e, GConstants.DEFAULT_EDGE_LABEL, vertexIDBerlin,
           vertexIDDresden, edgeGroupingKey, "2015", aggregatePropertyKey, 2, 1,
           FlinkConstants.SUMMARIZE_GRAPH_ID);
       } else {
@@ -1009,8 +990,7 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   @Test
   public void testSummarizeOnVertexAndEdgeLabel() throws Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getDatabaseGraph();
+      inputGraph = graphStore.getDatabaseGraph();
 
     final String aggregatePropertyKey = "count";
 
@@ -1093,9 +1073,8 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   public void testSummarizeOnVertexAndEdgeLabelAndVertexProperty() throws
     Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
-        .combine(graphStore.getGraph(2L));
+      inputGraph = graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
+      .combine(graphStore.getGraph(2L));
 
     final String vertexGroupingKey = "city";
     final String aggregatePropertyKey = "count";
@@ -1176,8 +1155,7 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   testSummarizeOnVertexAndEdgeLabelAndVertexPropertyWithAbsentValue() throws
     Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getDatabaseGraph();
+      inputGraph = graphStore.getDatabaseGraph();
 
     final String vertexGroupingKey = "city";
     final String aggregatePropertyKey = "count";
@@ -1306,9 +1284,8 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   public void testSummarizeOnVertexAndEdgeLabelAndEdgeProperty() throws
     Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
-        .combine(graphStore.getGraph(2L));
+      inputGraph = graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
+      .combine(graphStore.getGraph(2L));
 
     final String edgeGroupingKey = "since";
     final String aggregatePropertyKey = "count";
@@ -1373,8 +1350,7 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
     () throws
     Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getDatabaseGraph();
+      inputGraph = graphStore.getDatabaseGraph();
 
     final String edgeGroupingKey = "since";
     final String aggregatePropertyKey = "count";
@@ -1481,9 +1457,8 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
   public void testSummarizeOnVertexAndEdgeLabelAndVertexAndEdgeProperty() throws
     Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
-        .combine(graphStore.getGraph(2L));
+      inputGraph = graphStore.getGraph(0L).combine(graphStore.getGraph(1L))
+      .combine(graphStore.getGraph(2L));
 
     final String vertexGroupingKey = "city";
     final String edgeGroupingKey = "since";
@@ -1578,8 +1553,7 @@ public abstract class LogicalGraphSummarizeTest extends FlinkTest {
     throws
     Exception {
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-      inputGraph =
-      graphStore.getDatabaseGraph();
+      inputGraph = graphStore.getDatabaseGraph();
 
     final String vertexGroupingKey = "city";
     final String edgeGroupingKey = "since";

@@ -17,12 +17,25 @@
 
 package org.gradoop.model.operators;
 
-import org.gradoop.model.VertexData;
+import org.gradoop.model.EdgeData;
 import org.gradoop.model.helper.Predicate;
-import org.gradoop.model.impl.VertexDataCollection;
+import org.gradoop.model.impl.EdgeDataCollection;
 
-public interface VertexCollectionOperators<VD extends VertexData> extends
-  CollectionOperators<VD> {
+/**
+ * Defines methods that can be applied on a distributed collections of EPGM
+ * edge data objects.
+ *
+ * @param <ED> edge data type
+ */
+public interface EdgeDataCollectionOperators<ED extends EdgeData> extends
+  DataCollectionOperators<ED> {
 
-  VertexDataCollection<VD> filter(Predicate<VD> predicateFunction);
+  /**
+   * Returns a distributed edge data collection containing only the elements
+   * that fulfil the given predicate function.
+   *
+   * @param predicateFunction predicate function
+   * @return edge data collection
+   */
+  EdgeDataCollection<ED> filter(final Predicate<ED> predicateFunction);
 }

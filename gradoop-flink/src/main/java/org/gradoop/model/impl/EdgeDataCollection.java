@@ -23,34 +23,52 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.graph.Edge;
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.helper.Predicate;
-import org.gradoop.model.operators.EdgeCollectionOperators;
+import org.gradoop.model.operators.EdgeDataCollectionOperators;
 
 import java.util.Collection;
 
+/**
+ * Represents a distributed collection of edge data. Abstracts from a Flink
+ * dataset containing Gelly edges.
+ *
+ * @param <ED> edge data type
+ */
 public class EdgeDataCollection<ED extends EdgeData> implements
-  EdgeCollectionOperators<ED> {
+  EdgeDataCollectionOperators<ED> {
 
+  /**
+   * Flink dataset holding the actual edge data.
+   */
   private DataSet<Edge<Long, ED>> edges;
 
+  /**
+   * Creates a new edge collection from a given dataset.
+   *
+   * @param edges Gelly edge dataset
+   */
   EdgeDataCollection(DataSet<Edge<Long, ED>> edges) {
     this.edges = edges;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <T> Iterable<T> values(Class<T> propertyType, String propertyKey) {
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long size() throws Exception {
     return edges.count();
   }
 
-  @Override
-  public void print() throws Exception {
-    edges.print();
-  }
-
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public EdgeDataCollection<ED> filter(final Predicate<ED> predicateFunction) {
     return new EdgeDataCollection<>(
@@ -62,6 +80,9 @@ public class EdgeDataCollection<ED extends EdgeData> implements
       }));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Collection<ED> collect() throws Exception {
     return edges.map(new MapFunction<Edge<Long, ED>, ED>() {

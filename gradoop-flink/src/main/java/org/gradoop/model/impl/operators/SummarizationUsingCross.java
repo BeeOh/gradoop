@@ -23,38 +23,49 @@ import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.operators.Order;
-import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.operators.FilterOperator;
 import org.apache.flink.api.java.operators.FlatMapOperator;
 import org.apache.flink.api.java.operators.SortedGrouping;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple5;
-import org.apache.flink.api.java.typeutils.TupleTypeInfo;
-import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.apache.flink.graph.Edge;
 import org.apache.flink.graph.Graph;
 import org.apache.flink.graph.Vertex;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.EdgeData;
-import org.gradoop.model.EdgeDataFactory;
 import org.gradoop.model.GraphData;
-import org.gradoop.model.GraphDataFactory;
 import org.gradoop.model.VertexData;
-import org.gradoop.model.VertexDataFactory;
 
 import java.util.List;
 
-public class SummarizationCross<VD extends VertexData, ED extends EdgeData,
-  GD extends GraphData> extends
+/**
+ * Summarization implementation that uses cross computations.
+ *
+ * @param <VD> vertex data type
+ * @param <ED> edge data type
+ * @param <GD> graph data type
+ */
+public class SummarizationUsingCross<VD extends VertexData, ED extends
+  EdgeData, GD extends GraphData> extends
   Summarization<VD, ED, GD> {
 
-  public SummarizationCross(String vertexGroupingKey, String edgeGroupingKey,
-    boolean useVertexLabels, boolean useEdgeLabels) {
+  /**
+   * Creates summarization.
+   *
+   * @param vertexGroupingKey property key to summarize vertices
+   * @param edgeGroupingKey   property key to summarize edges
+   * @param useVertexLabels   summarize on vertex label true/false
+   * @param useEdgeLabels     summarize on edge label true/false
+   */
+  public SummarizationUsingCross(String vertexGroupingKey,
+    String edgeGroupingKey, boolean useVertexLabels, boolean useEdgeLabels) {
     super(vertexGroupingKey, edgeGroupingKey, useVertexLabels, useEdgeLabels);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected Graph<Long, VD, ED> summarizeInternal(Graph<Long, VD, ED> graph) {
     /* build summarized vertices */
@@ -77,16 +88,32 @@ public class SummarizationCross<VD extends VertexData, ED extends EdgeData,
     return Graph.fromDataSet(newVertices, newEdges, graph.getContext());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getName() {
-    return "SummarizationCross";
+    return SummarizationUsingCross.class.getName();
   }
 
+  /**
+   * Creates a list containing all vertex ids in a group.
+   *
+   * @param groupedSortedVertices grouped and sorted vertices
+   * @return dataset containing sorted lists of vertex identifiers
+   */
   private DataSet<List<Long>> createListFromVertexGroup(
     SortedGrouping<Vertex<Long, VD>> groupedSortedVertices) {
     return groupedSortedVertices.reduceGroup(new VertexGroupToList<VD>());
   }
 
+  /**
+   * Builds summarized edges.
+   *
+   * @param graph        input graph
+   * @param vertexGroups dataset containing sorted lists of vertex identifiers
+   * @return summarized edges
+   */
   private DataSet<Edge<Long, ED>> buildSummarizedEdges(
     Graph<Long, VD, ED> graph, DataSet<List<Long>> vertexGroups) {
     // map edges to relevant information
@@ -150,6 +177,9 @@ public class SummarizationCross<VD extends VertexData, ED extends EdgeData,
    */
   private static class VertexGroupToList<VD extends VertexData> implements
     GroupReduceFunction<Vertex<Long, VD>, List<Long>> {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void reduce(Iterable<Vertex<Long, VD>> vertices,
       Collector<List<Long>> collector) throws Exception {
@@ -164,18 +194,18 @@ public class SummarizationCross<VD extends VertexData, ED extends EdgeData,
   /**
    * Creates intra/inter edges by replacing source-vertex [and target-vertex]
    * with their corresponding vertex group representative.
-   * <p/>
+   * <p>
    * Takes a tuple (vertex-group, edge) as input and returns a new edge
    * considering three options:
-   * <p/>
+   * <p>
    * 1)
    * source-vertex in group and target-vertex in group =>
    * (group-representative, group-representative) // intra-edge
-   * <p/>
+   * <p>
    * 2)
    * source-vertex in group =>
    * (group-representative, target-vertex) // inter-edge
-   * <p/>
+   * <p>
    * 3)
    * target-vertex in group =>
    * no output as this is processed by another group, edge pair
@@ -184,6 +214,9 @@ public class SummarizationCross<VD extends VertexData, ED extends EdgeData,
     FlatMapFunction<Tuple2<List<Long>, Tuple5<Long, Long, Long, String,
       String>>, Tuple5<Long, Long, Long, String, String>> {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void flatMap(
       Tuple2<List<Long>, Tuple5<Long, Long, Long, String, String>> t,
@@ -224,6 +257,9 @@ public class SummarizationCross<VD extends VertexData, ED extends EdgeData,
     FlatMapFunction<Tuple2<List<Long>, Tuple5<Long, Long, Long, String,
       String>>, Tuple5<Long, Long, Long, String, String>> {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void flatMap(
       Tuple2<List<Long>, Tuple5<Long, Long, Long, String, String>> t,
@@ -253,6 +289,9 @@ public class SummarizationCross<VD extends VertexData, ED extends EdgeData,
    */
   private static class IntraEdgeFilterWith implements
     FilterFunction<Tuple5<Long, Long, Long, String, String>> {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean filter(Tuple5<Long, Long, Long, String, String> t) throws
       Exception {
@@ -265,7 +304,9 @@ public class SummarizationCross<VD extends VertexData, ED extends EdgeData,
    */
   private static class InterEdgeFilter implements
     FilterFunction<Tuple5<Long, Long, Long, String, String>> {
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean filter(Tuple5<Long, Long, Long, String, String> t) throws
       Exception {
@@ -280,14 +321,30 @@ public class SummarizationCross<VD extends VertexData, ED extends EdgeData,
   private static class EdgeProjection<ED extends EdgeData> implements
     MapFunction<Edge<Long, ED>, Tuple5<Long, Long, Long, String, String>> {
 
-    private String groupPropertyKey;
-    private boolean useLabel;
+    /**
+     * Edge property key for grouping
+     */
+    private final String groupPropertyKey;
+    /**
+     * True if edge label shall be used for grouping
+     */
+    private final boolean useLabel;
 
+    /**
+     * Creates edge projection.
+     *
+     * @param groupPropertyKey edge property key
+     * @param useLabel         true, if edge label shall be used, false
+     *                         otherwise
+     */
     public EdgeProjection(String groupPropertyKey, boolean useLabel) {
       this.groupPropertyKey = groupPropertyKey;
       this.useLabel = useLabel;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Tuple5<Long, Long, Long, String, String> map(Edge<Long, ED> e) throws
       Exception {

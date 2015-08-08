@@ -23,8 +23,21 @@ import org.gradoop.model.VertexData;
 import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.impl.GraphCollection;
 
+/**
+ * Creates a {@link LogicalGraph} from one input collection.
+ *
+ * @param <VD> vertex data
+ * @param <ED> edge data
+ * @param <GD> graph data
+ */
 public interface UnaryCollectionToGraphOperator<VD extends VertexData, ED
   extends EdgeData, GD extends GraphData> extends
   Operator {
+  /**
+   * Executes the operator.
+   *
+   * @param collection input collection
+   * @return operator result
+   */
   LogicalGraph<VD, ED, GD> execute(GraphCollection<VD, ED, GD> collection);
 }

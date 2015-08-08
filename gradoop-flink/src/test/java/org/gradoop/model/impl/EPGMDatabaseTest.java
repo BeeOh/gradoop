@@ -19,7 +19,6 @@ package org.gradoop.model.impl;
 
 import junitparams.JUnitParamsRunner;
 import org.gradoop.model.FlinkTest;
-import org.gradoop.model.store.EPGraphStore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -29,15 +28,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitParamsRunner.class)
-public class FlinkGraphStoreTest extends FlinkTest {
+public class EPGMDatabaseTest extends FlinkTest {
 
-  private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
-    graphStore;
+  private EPGMDatabase graphStore;
 
   @Rule
   public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-  public FlinkGraphStoreTest() {
+  public EPGMDatabaseTest() {
     graphStore = createSocialGraph();
   }
 
@@ -54,15 +52,15 @@ public class FlinkGraphStoreTest extends FlinkTest {
   @Test
   public void testFromJsonFile() throws Exception {
     String vertexFile =
-      FlinkGraphStoreTest.class.getResource("/sna_nodes").getFile();
+      EPGMDatabaseTest.class.getResource("/sna_nodes").getFile();
     String edgeFile =
-      FlinkGraphStoreTest.class.getResource("/sna_edges").getFile();
+      EPGMDatabaseTest.class.getResource("/sna_edges").getFile();
     String graphFile =
-      FlinkGraphStoreTest.class.getResource("/sna_graphs").getFile();
+      EPGMDatabaseTest.class.getResource("/sna_graphs").getFile();
 
-    EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+    EPGMDatabase<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
       graphStore =
-      FlinkGraphStore.fromJsonFile(vertexFile, edgeFile, graphFile, env);
+      EPGMDatabase.fromJsonFile(vertexFile, edgeFile, graphFile, env);
 
     LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
       databaseGraph = graphStore.getDatabaseGraph();
@@ -82,8 +80,9 @@ public class FlinkGraphStoreTest extends FlinkTest {
 
     graphStore.writeAsJson(vertexFile, edgeFile, graphFile);
 
-    EPGraphStore newGraphStore =
-      FlinkGraphStore.fromJsonFile(vertexFile, edgeFile, graphFile, env);
+    EPGMDatabase<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+      newGraphStore =
+      EPGMDatabase.fromJsonFile(vertexFile, edgeFile, graphFile, env);
 
     assertEquals(graphStore.getDatabaseGraph().getVertexCount(),
       newGraphStore.getDatabaseGraph().getVertexCount());

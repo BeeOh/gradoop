@@ -3,7 +3,6 @@ package org.gradoop.model.impl;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.gradoop.model.FlinkTest;
-import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -12,7 +11,7 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitParamsRunner.class)
 public class GraphCollectionDifferenceTest extends FlinkTest {
-  private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+  private EPGMDatabase<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
     graphStore;
 
   public GraphCollectionDifferenceTest() {
@@ -37,8 +36,18 @@ public class GraphCollectionDifferenceTest extends FlinkTest {
     assertEquals("wrong number of graphs", expectedCollSize,
       differenceColl.size());
     assertEquals("wrong number of vertices", expectedVertexCount,
-      differenceColl.getGraph().getVertexCount());
+      differenceColl.getTotalVertexCount());
     assertEquals("wrong number of edges", expectedEdgeCount,
-      differenceColl.getGraph().getEdgeCount());
+      differenceColl.getTotalEdgeCount());
+
+    differenceColl = collection1.differenceWithSmallResult(collection2);
+
+    assertNotNull("graph collection is null", differenceColl);
+    assertEquals("wrong number of graphs", expectedCollSize,
+      differenceColl.size());
+    assertEquals("wrong number of vertices", expectedVertexCount,
+      differenceColl.getTotalVertexCount());
+    assertEquals("wrong number of edges", expectedEdgeCount,
+      differenceColl.getTotalEdgeCount());
   }
 }

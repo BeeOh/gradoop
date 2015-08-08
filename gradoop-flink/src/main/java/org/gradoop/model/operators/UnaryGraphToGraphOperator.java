@@ -22,8 +22,23 @@ import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.impl.LogicalGraph;
 
+/**
+ * Creates a {@link LogicalGraph} based on one input {@link LogicalGraph}.
+ *
+ * @param <VD> vertex data type
+ * @param <ED> edge data type
+ * @param <GD> graph data type
+ */
 public interface UnaryGraphToGraphOperator<VD extends VertexData, ED extends
   EdgeData, GD extends GraphData> extends
   Operator {
-  LogicalGraph<VD, ED, GD> execute(LogicalGraph<VD, ED, GD> graph) throws Exception;
+  /**
+   * Executes the operator.
+   *
+   * @param graph input graph
+   * @return operator result
+   * @throws Exception
+   */
+  LogicalGraph<VD, ED, GD> execute(LogicalGraph<VD, ED, GD> graph) throws
+    Exception;
 }

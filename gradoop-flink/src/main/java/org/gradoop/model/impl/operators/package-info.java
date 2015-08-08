@@ -15,14 +15,7 @@
  * along with Gradoop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.helper;
-
-import org.gradoop.model.EdgeData;
-import org.gradoop.model.VertexData;
-
-public interface PatternGraph {
-
-  VertexData getVertex(String variable);
-
-  EdgeData getEdge(String variable);
-}
+/**
+ * Contains all EPGM operator implementations in Flink.
+ */
+package org.gradoop.model.impl.operators;

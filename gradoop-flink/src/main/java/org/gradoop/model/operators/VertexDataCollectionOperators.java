@@ -15,23 +15,27 @@
  * along with Gradoop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.store;
+package org.gradoop.model.operators;
 
-import org.gradoop.model.EdgeData;
-import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
-import org.gradoop.model.impl.LogicalGraph;
-import org.gradoop.model.impl.GraphCollection;
+import org.gradoop.model.helper.Predicate;
+import org.gradoop.model.impl.VertexDataCollection;
 
-public interface EPGraphStore<VD extends VertexData, ED extends EdgeData, GD
-  extends GraphData> {
+/**
+ * Defines methods that can be applied on a distributed collections of EPGM
+ * vertex data objects.
+ *
+ * @param <VD> vertex data type
+ */
+public interface VertexDataCollectionOperators<VD extends VertexData> extends
+  DataCollectionOperators<VD> {
 
-  LogicalGraph<VD, ED, GD> getDatabaseGraph();
-
-  GraphCollection<VD, ED, GD> getCollection();
-
-  LogicalGraph<VD, ED, GD> getGraph(Long graphID) throws Exception;
-
-  void writeAsJson(final String vertexFile, final String egeFile,
-    final String graphFile) throws Exception;
+  /**
+   * Returns a distributed vertex data collection containing only the elements
+   * that fulfil the given predicate function.
+   *
+   * @param predicateFunction predicate function
+   * @return vertex data collection
+   */
+  VertexDataCollection<VD> filter(Predicate<VD> predicateFunction);
 }

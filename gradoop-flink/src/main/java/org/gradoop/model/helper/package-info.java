@@ -16,6 +16,6 @@
  */
 
 /**
- * Contains all operator definitions used in the Gradoop framework.
+ * Contains all helper classes used for Flink execution.
  */
-package org.gradoop.model.operators;
+package org.gradoop.model.helper;

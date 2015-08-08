@@ -3,7 +3,6 @@ package org.gradoop.model.impl;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.gradoop.model.FlinkTest;
-import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -12,7 +11,7 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitParamsRunner.class)
 public class GraphCollectionUnionTest extends FlinkTest {
-  private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+  private EPGMDatabase<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
     graphStore;
 
   public GraphCollectionUnionTest() {
@@ -38,8 +37,8 @@ public class GraphCollectionUnionTest extends FlinkTest {
     assertNotNull("graph collection is null", unionColl);
     assertEquals("wrong number of graphs", expectedCollSize, unionColl.size());
     assertEquals("wrong number of vertices", expectedVertexCount,
-      unionColl.getGraph().getVertexCount());
+      unionColl.getTotalVertexCount());
     assertEquals("wrong number of edges", expectedEdgeCount,
-      unionColl.getGraph().getEdgeCount());
+      unionColl.getTotalEdgeCount());
   }
 }

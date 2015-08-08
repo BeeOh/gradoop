@@ -23,19 +23,36 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.graph.Vertex;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.helper.Predicate;
-import org.gradoop.model.operators.VertexCollectionOperators;
+import org.gradoop.model.operators.VertexDataCollectionOperators;
 
 import java.util.Collection;
 
+/**
+ * Represents a distributed collection of vertex data. Abstract from a Flink
+ * dataset containing Gelly vertices.
+ *
+ * @param <VD> vertex data type
+ */
 public class VertexDataCollection<VD extends VertexData> implements
-  VertexCollectionOperators<VD> {
+  VertexDataCollectionOperators<VD> {
 
+  /**
+   * Flink dataset holding the actual vertex data.
+   */
   private DataSet<Vertex<Long, VD>> vertices;
 
+  /**
+   * Creates a new vertex collection from a given dataset.
+   *
+   * @param vertices Gelly vertex dataset
+   */
   VertexDataCollection(DataSet<Vertex<Long, VD>> vertices) {
     this.vertices = vertices;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public VertexDataCollection<VD> filter(
     final Predicate<VD> predicateFunction) {
@@ -48,11 +65,17 @@ public class VertexDataCollection<VD extends VertexData> implements
       }));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <T> Iterable<T> values(Class<T> propertyType, String propertyKey) {
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Collection<VD> collect() throws Exception {
     return vertices.map(new MapFunction<Vertex<Long, VD>, VD>() {
@@ -63,13 +86,11 @@ public class VertexDataCollection<VD extends VertexData> implements
     }).collect();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long size() throws Exception {
     return vertices.count();
-  }
-
-  @Override
-  public void print() throws Exception {
-    vertices.print();
   }
 }

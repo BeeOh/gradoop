@@ -18,7 +18,7 @@
 package org.gradoop.model.impl;
 
 import org.gradoop.model.impl.operators.Summarization;
-import org.gradoop.model.impl.operators.SummarizationCross;
+import org.gradoop.model.impl.operators.SummarizationUsingCross;
 
 public class LogicalGraphSummarizeCrossTest extends LogicalGraphSummarizeTest {
   @Override
@@ -26,7 +26,7 @@ public class LogicalGraphSummarizeCrossTest extends LogicalGraphSummarizeTest {
   getSummarizationImpl(
     String vertexGroupingKey, boolean useVertexLabel, String edgeGroupingKey,
     boolean useEdgeLabel) {
-    return new SummarizationCross<>(vertexGroupingKey, edgeGroupingKey,
+    return new SummarizationUsingCross<>(vertexGroupingKey, edgeGroupingKey,
       useVertexLabel, useEdgeLabel);
   }
 }

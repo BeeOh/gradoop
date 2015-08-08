@@ -37,22 +37,38 @@ import org.gradoop.model.GraphDataFactory;
 import org.gradoop.model.VertexData;
 import org.gradoop.model.VertexDataFactory;
 import org.gradoop.model.helper.FlinkConstants;
-import org.gradoop.model.helper.Subgraph;
-import org.gradoop.model.store.EPGraphStore;
 
 import java.util.Collection;
 
-public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
-  extends GraphData> implements
-  EPGraphStore<VD, ED, GD> {
+/**
+ * Enables the access an EPGM instance.
+ *
+ * @param <VD> vertex data type
+ * @param <ED> edge data type
+ * @param <GD> graph data type
+ */
+public class EPGMDatabase<VD extends VertexData, ED extends EdgeData, GD
+  extends GraphData> {
 
+  /**
+   * Used to create new vertex data.
+   */
   private final VertexDataFactory<VD> vertexDataFactory;
+
+  /**
+   * Used to create new edge data.
+   */
   private final EdgeDataFactory<ED> edgeDataFactory;
+
+  /**
+   * Used to create new graph data.
+   */
   private final GraphDataFactory<GD> graphDataFactory;
 
-  private GD databaseData;
-
-  private Subgraph<Long, GD> databaseSubgraph;
+  /**
+   * Graph data associated with that logical graph.
+   */
+  private final GD databaseData;
 
   /**
    * Database graph representing the vertex and edge space.
@@ -64,7 +80,18 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
    */
   private final ExecutionEnvironment env;
 
-  private FlinkGraphStore(DataSet<Vertex<Long, VD>> vertices,
+  /**
+   * Creates a new EPGM database from the given arguments.
+   *
+   * @param vertices          vertex data set
+   * @param edges             edge data set
+   * @param graphs            graph data set
+   * @param vertexDataFactory vertex data factory
+   * @param edgeDataFactory   edge data factory
+   * @param graphDataFactory  graph data factory
+   * @param env               Flink execution environment
+   */
+  private EPGMDatabase(DataSet<Vertex<Long, VD>> vertices,
     DataSet<Edge<Long, ED>> edges, DataSet<Subgraph<Long, GD>> graphs,
     VertexDataFactory<VD> vertexDataFactory,
     EdgeDataFactory<ED> edgeDataFactory, GraphDataFactory<GD> graphDataFactory,
@@ -78,19 +105,47 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
     this.env = env;
     this.databaseData =
       graphDataFactory.createGraphData(FlinkConstants.DATABASE_GRAPH_ID);
-    this.databaseSubgraph =
-      new Subgraph<>(FlinkConstants.DATABASE_GRAPH_ID, databaseData);
   }
 
-  public static EPGraphStore<DefaultVertexData, DefaultEdgeData,
+  /**
+   * Creates a database from JSON files. Paths can be local (file://) or HDFS
+   * (hdfs://).
+   * <p>
+   * Uses default factories for POJO creation.
+   *
+   * @param vertexFile path to vertex data file
+   * @param edgeFile   path to edge data file
+   * @param env        Flink execution environment
+   * @return EPGM database with default factories.
+   * @see DefaultVertexDataFactory
+   * @see DefaultEdgeDataFactory
+   * @see DefaultGraphDataFactory
+   */
+  @SuppressWarnings("unchecked")
+  public static EPGMDatabase<DefaultVertexData, DefaultEdgeData,
     DefaultGraphData> fromJsonFile(
     String vertexFile, String edgeFile, ExecutionEnvironment env) {
     return fromJsonFile(vertexFile, edgeFile, new DefaultVertexDataFactory(),
       new DefaultEdgeDataFactory(), new DefaultGraphDataFactory(), env);
   }
 
+  /**
+   * Creates a database from JSON files. Paths can be local (file://) or HDFS
+   * (hdfs://). Data POJOs are created using the given factories.
+   *
+   * @param vertexFile        path to vertex data file
+   * @param edgeFile          path to edge data file
+   * @param vertexDataFactory vertex data factory
+   * @param edgeDataFactory   edge data factory
+   * @param graphDataFactory  graph data factory
+   * @param env               Flink execution environment
+   * @param <VD>              vertex data type
+   * @param <ED>              edge data type
+   * @param <GD>              graph data type
+   * @return EPGM database
+   */
   public static <VD extends VertexData, ED extends EdgeData, GD extends
-    GraphData> EPGraphStore<VD, ED, GD> fromJsonFile(
+    GraphData> EPGMDatabase fromJsonFile(
     String vertexFile, String edgeFile, VertexDataFactory<VD> vertexDataFactory,
     EdgeDataFactory<ED> edgeDataFactory, GraphDataFactory<GD> graphDataFactory,
     ExecutionEnvironment env) {
@@ -98,7 +153,23 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
       edgeDataFactory, graphDataFactory, env);
   }
 
-  public static EPGraphStore<DefaultVertexData, DefaultEdgeData,
+  /**
+   * Creates a database from JSON files. Paths can be local (file://) or HDFS
+   * (hdfs://).
+   * <p>
+   * Uses default factories for POJO creation.
+   *
+   * @param vertexFile vertex data file
+   * @param edgeFile   edge data file
+   * @param graphFile  graph data file
+   * @param env        Flink execution environment
+   * @return EPGM database
+   * @see DefaultVertexDataFactory
+   * @see DefaultEdgeDataFactory
+   * @see DefaultGraphDataFactory
+   */
+  @SuppressWarnings("unchecked")
+  public static EPGMDatabase<DefaultVertexData, DefaultEdgeData,
     DefaultGraphData> fromJsonFile(
     String vertexFile, String edgeFile, String graphFile,
     ExecutionEnvironment env) {
@@ -107,27 +178,45 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
       new DefaultGraphDataFactory(), env);
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  /**
+   * Creates a database from JSON files. Paths can be local (file://) or HDFS
+   * (hdfs://).
+   *
+   * @param vertexFile        vertex data file
+   * @param edgeFile          edge data file
+   * @param graphFile         graph data file
+   * @param vertexDataFactory vertex data factory
+   * @param edgeDataFactory   edge data factory
+   * @param graphDataFactory  graph data factory
+   * @param env               Flink execution environment
+   * @param <VD>              vertex data type
+   * @param <ED>              edge data type
+   * @param <GD>              graph data type
+   * @return EPGM database
+   */
+  @SuppressWarnings("unchecked")
   public static <VD extends VertexData, ED extends EdgeData, GD extends
-    GraphData> EPGraphStore<VD, ED, GD> fromJsonFile(
+    GraphData> EPGMDatabase fromJsonFile(
     String vertexFile, String edgeFile, String graphFile,
     VertexDataFactory<VD> vertexDataFactory,
     EdgeDataFactory<ED> edgeDataFactory, GraphDataFactory<GD> graphDataFactory,
     ExecutionEnvironment env) {
 
+    // used for type hinting when loading vertex data
     TypeInformation<Vertex<Long, VD>> vertexTypeInfo =
       new TupleTypeInfo(Vertex.class, BasicTypeInfo.LONG_TYPE_INFO,
         TypeExtractor.createTypeInfo(vertexDataFactory.getType()));
-
+    // used for type hinting when loading edge data
     TypeInformation<Edge<Long, ED>> edgeTypeInfo =
       new TupleTypeInfo(Edge.class, BasicTypeInfo.LONG_TYPE_INFO,
         BasicTypeInfo.LONG_TYPE_INFO,
         TypeExtractor.createTypeInfo(edgeDataFactory.getType()));
-
+    // used for type hinting when loading graph data
     TypeInformation<Subgraph<Long, GD>> graphTypeInfo =
       new TupleTypeInfo(Subgraph.class, BasicTypeInfo.LONG_TYPE_INFO,
         TypeExtractor.createTypeInfo(graphDataFactory.getType()));
 
+    // read vertex, edge and graph data
     DataSet<Vertex<Long, VD>> vertices = env.readTextFile(vertexFile)
       .map(new JsonReader.JsonToVertexMapper<>(vertexDataFactory))
       .returns(vertexTypeInfo);
@@ -145,11 +234,24 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
           graphDataFactory.createGraphData(FlinkConstants.DATABASE_GRAPH_ID))));
     }
 
-    return new FlinkGraphStore<>(vertices, edges, graphs, vertexDataFactory,
+    return new EPGMDatabase<>(vertices, edges, graphs, vertexDataFactory,
       edgeDataFactory, graphDataFactory, env);
   }
 
-  @Override
+  /**
+   * Writes the epgm database into three separate JSON files. {@code
+   * vertexFile} contains all vertex data, {@code edgeFile} contains all edge
+   * data and {@code graphFile} contains graph data of all logical graphs.
+   * <p>
+   * Operation uses Flink to write the internal datasets, thus writing to
+   * local file system ({@code file://}) as well as HDFS ({@code hdfs://}) is
+   * supported.
+   *
+   * @param vertexFile vertex data output file
+   * @param edgeFile   edge data output file
+   * @param graphFile  graph data output file
+   * @throws Exception
+   */
   public void writeAsJson(final String vertexFile, final String edgeFile,
     final String graphFile) throws Exception {
     getDatabaseGraph().getGellyGraph().getVertices()
@@ -163,7 +265,21 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
       .getDataSet().collect();
   }
 
-  public static EPGraphStore<DefaultVertexData, DefaultEdgeData,
+  /**
+   * Creates a database from collections of vertex and edge data objects.
+   * <p>
+   * Uses default factories for POJO creation.
+   *
+   * @param vertexDataCollection collection of vertex data objects
+   * @param edgeDataCollection   collection of edge data objects
+   * @param env                  Flink execution environment
+   * @return EPGM database
+   * @see DefaultVertexDataFactory
+   * @see DefaultEdgeDataFactory
+   * @see DefaultGraphDataFactory
+   */
+  @SuppressWarnings("unchecked")
+  public static EPGMDatabase<DefaultVertexData, DefaultEdgeData,
     DefaultGraphData> fromCollection(
     Collection<DefaultVertexData> vertexDataCollection,
     Collection<DefaultEdgeData> edgeDataCollection, ExecutionEnvironment env) {
@@ -172,8 +288,22 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
       new DefaultGraphDataFactory(), env);
   }
 
+  /**
+   * Creates a database from collections of vertex and data objects.
+   *
+   * @param vertexDataCollection collection of vertex data objects
+   * @param edgeDataCollection   collection of edge data objects
+   * @param vertexDataFactory    vertex data factory
+   * @param edgeDataFactory      edge data factory
+   * @param graphDataFactory     graph data factory
+   * @param env                  Flink execution environment
+   * @param <VD>                 vertex data type
+   * @param <ED>                 edge data type
+   * @param <GD>                 graph data typeFlink execution environment
+   * @return EPGM database
+   */
   public static <VD extends VertexData, ED extends EdgeData, GD extends
-    GraphData> EPGraphStore<VD, ED, GD> fromCollection(
+    GraphData> EPGMDatabase fromCollection(
     Collection<VD> vertexDataCollection, Collection<ED> edgeDataCollection,
     VertexDataFactory<VD> vertexDataFactory,
     EdgeDataFactory<ED> edgeDataFactory, GraphDataFactory<GD> graphDataFactory,
@@ -182,7 +312,22 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
       vertexDataFactory, edgeDataFactory, graphDataFactory, env);
   }
 
-  public static EPGraphStore<DefaultVertexData, DefaultEdgeData,
+  /**
+   * Creates a database from collections of vertex, edge and graph data objects.
+   * <p>
+   * Uses default factories for POJO creation.
+   *
+   * @param vertexDataCollection collection of vertex data objects
+   * @param edgeDataCollection   collection of edge data objects
+   * @param graphDataCollection  collection of graph data objects
+   * @param env                  Flink execution environment
+   * @return EPGM database
+   * @see DefaultVertexDataFactory
+   * @see DefaultEdgeDataFactory
+   * @see DefaultGraphDataFactory
+   */
+  @SuppressWarnings("unchecked")
+  public static EPGMDatabase<DefaultVertexData, DefaultEdgeData,
     DefaultGraphData> fromCollection(
     Collection<DefaultVertexData> vertexDataCollection,
     Collection<DefaultEdgeData> edgeDataCollection,
@@ -193,8 +338,24 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
       new DefaultEdgeDataFactory(), new DefaultGraphDataFactory(), env);
   }
 
+  /**
+   * Creates a database from collections of vertex and data objects.
+   *
+   * @param vertexDataCollection collection of vertex data objects
+   * @param edgeDataCollection   collection of edge data objects
+   * @param graphDataCollection  collection of graph data objects* @param
+   *                             edgeDataCollection
+   * @param vertexDataFactory    vertex data factory
+   * @param edgeDataFactory      edge data factory
+   * @param graphDataFactory     graph data factory
+   * @param env                  Flink execution environment
+   * @param <VD>                 vertex data type
+   * @param <ED>                 edge data type
+   * @param <GD>                 graph data type
+   * @return EPGM database
+   */
   public static <VD extends VertexData, ED extends EdgeData, GD extends
-    GraphData> EPGraphStore<VD, ED, GD> fromCollection(
+    GraphData> EPGMDatabase fromCollection(
     Collection<VD> vertexDataCollection, Collection<ED> edgeDataCollection,
     Collection<GD> graphDataCollection, VertexDataFactory<VD> vertexDataFactory,
     EdgeDataFactory<ED> edgeDataFactory, GraphDataFactory<GD> graphDataFactory,
@@ -218,33 +379,51 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
       edgeDataSet = epgmEdgeSet.map(new EdgesConverter<ED>());
       graphDataSet = epgmGraphSet.map(new GraphsConverter<GD>());
     }
-    return new FlinkGraphStore<>(vertexDataSet, edgeDataSet, graphDataSet,
+    return new EPGMDatabase<>(vertexDataSet, edgeDataSet, graphDataSet,
       vertexDataFactory, edgeDataFactory, graphDataFactory, env);
   }
 
-  @Override
+  /**
+   * Returns a logical graph containing the complete vertex and edge space of
+   * that EPGM database.
+   *
+   * @return logical graph of vertex and edge space
+   */
   public LogicalGraph<VD, ED, GD> getDatabaseGraph() {
     return LogicalGraph
-      .fromGraph(database.getGraph().getGellyGraph(), databaseData,
-        vertexDataFactory, edgeDataFactory, graphDataFactory);
+      .fromGraph(database.getGellyGraph(), databaseData, vertexDataFactory,
+        edgeDataFactory, graphDataFactory);
   }
 
-  @Override
-  public GraphCollection<VD, ED, GD> getCollection() {
-    return database;
-  }
-
-  @Override
+  /**
+   * Returns a logical graph by its identifier.
+   *
+   * @param graphID graph identifier
+   * @return logical graph or {@code null} if graph does not exist
+   * @throws Exception
+   */
   public LogicalGraph<VD, ED, GD> getGraph(Long graphID) throws Exception {
     return database.getGraph(graphID);
   }
 
   /**
-   * Takes an EPGM vertex and converts it into a flink vertex.
+   * Returns a collection of all logical graph contained in that EPGM database.
+   *
+   * @return collection of all logical graphs
    */
-  public static class VerticesConverter<VD extends VertexData> implements
+  public GraphCollection<VD, ED, GD> getCollection() {
+    return database;
+  }
+
+  /**
+   * Takes an EPGM vertex data object and converts it into a Gelly vertex.
+   */
+  private static class VerticesConverter<VD extends VertexData> implements
     MapFunction<VD, Vertex<Long, VD>> {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Vertex<Long, VD> map(VD value) throws Exception {
       return new Vertex<>(value.getId(), value);
@@ -252,12 +431,14 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
   }
 
   /**
-   * Takes an EPGM vertex and produces a collection of flink edges based on
-   * its outgoing edges.
+   * Takes an EPGM edge data object and converts it into a Gelly edge.
    */
   public static class EdgesConverter<ED extends EdgeData> implements
     MapFunction<ED, Edge<Long, ED>> {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Edge<Long, ED> map(ED value) throws Exception {
       return new Edge<>(value.getSourceVertexId(), value.getTargetVertexId(),
@@ -266,12 +447,14 @@ public class FlinkGraphStore<VD extends VertexData, ED extends EdgeData, GD
   }
 
   /**
-   * Takes an EPGM vertex and produces a collection of flink edges based on
-   * its outgoing edges.
+   * Takes an EPGM graph data object and converts into a subgraph.
    */
-  public static class GraphsConverter<GD extends GraphData> implements
+  private static class GraphsConverter<GD extends GraphData> implements
     MapFunction<GD, Subgraph<Long, GD>> {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Subgraph<Long, GD> map(GD value) throws Exception {
       return new Subgraph<>(value.getId(), value);

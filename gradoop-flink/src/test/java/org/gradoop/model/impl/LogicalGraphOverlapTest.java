@@ -22,7 +22,6 @@ import junitparams.Parameters;
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.FlinkTest;
 import org.gradoop.model.VertexData;
-import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -33,7 +32,7 @@ import static org.junit.Assert.*;
 
 @RunWith(JUnitParamsRunner.class)
 public class LogicalGraphOverlapTest extends FlinkTest {
-  private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+  private EPGMDatabase<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
     graphStore;
 
   public LogicalGraphOverlapTest() {

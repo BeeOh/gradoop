@@ -29,18 +29,25 @@ import org.gradoop.model.helper.FlinkConstants;
 import org.gradoop.model.helper.KeySelectors;
 import org.gradoop.model.impl.LogicalGraph;
 
+/**
+ * Creates a new logical graph containing only vertices and edges that
+ * exist in the first input graph but not in the second input graph. Vertex and
+ * edge equality is based on their respective identifiers.
+ *
+ * @param <VD> vertex data type
+ * @param <ED> edge data type
+ * @param <GD> graph data type
+ */
 public class Exclusion<VD extends VertexData, ED extends EdgeData, GD extends
   GraphData> extends
   AbstractBinaryGraphToGraphOperator<VD, ED, GD> {
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
-  public String getName() {
-    return "Exclusion";
-  }
-
-  @Override
-  protected LogicalGraph<VD, ED, GD> executeInternal(LogicalGraph<VD, ED, GD> firstGraph,
-    LogicalGraph<VD, ED, GD> secondGraph) {
+  protected LogicalGraph<VD, ED, GD> executeInternal(
+    LogicalGraph<VD, ED, GD> firstGraph, LogicalGraph<VD, ED, GD> secondGraph) {
     final Long newGraphID = FlinkConstants.EXCLUDE_GRAPH_ID;
 
     Graph<Long, VD, ED> graph1 = firstGraph.getGellyGraph();
@@ -80,5 +87,13 @@ public class Exclusion<VD extends VertexData, ED extends EdgeData, GD extends
       firstGraph.getGraphDataFactory().createGraphData(newGraphID),
       firstGraph.getVertexDataFactory(), firstGraph.getEdgeDataFactory(),
       firstGraph.getGraphDataFactory());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName() {
+    return Exclusion.class.getName();
   }
 }

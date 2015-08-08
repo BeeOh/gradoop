@@ -15,23 +15,7 @@
  * along with Gradoop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model;
-
 /**
- * Describes an identifiable entity.
+ * Contains Gradoop summarization example for cluster execution.
  */
-public interface Identifiable {
-  /**
-   * Returns the identifier of that entity.
-   *
-   * @return identifier
-   */
-  Long getId();
-
-  /**
-   * Sets the identifier of that entity.
-   *
-   * @param id identifier
-   */
-  void setId(Long id);
-}
+package org.gradoop.examples;

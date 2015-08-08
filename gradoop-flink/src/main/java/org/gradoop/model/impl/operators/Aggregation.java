@@ -24,20 +24,46 @@ import org.gradoop.model.helper.UnaryFunction;
 import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.operators.UnaryGraphToGraphOperator;
 
+/**
+ * Takes a logical graph and a user defined aggregate function as input. The
+ * aggregate function is applied on the logical graph and the resulting
+ * aggregate is stored as an additional property at the result graph.
+ *
+ * @param <VD> vertex data type
+ * @param <ED> edge data type
+ * @param <GD> graph data type
+ * @param <O>  output type of aggregate function
+ */
 public class Aggregation<VD extends VertexData, ED extends EdgeData, GD
   extends GraphData, O extends Number> implements
   UnaryGraphToGraphOperator<VD, ED, GD> {
 
+  /**
+   * Used to store aggregate result.
+   */
   private final String aggregatePropertyKey;
+  /**
+   * User defined aggregate function.
+   */
   private final UnaryFunction<LogicalGraph<VD, ED, GD>, O> aggregationFunc;
 
+  /**
+   * Creates new aggregation.
+   *
+   * @param aggregatePropertyKey property key to store result of {@code
+   *                             aggregationFunc}
+   * @param aggregationFunc      user defined aggregation function which gets
+   *                             called on the input graph
+   */
   public Aggregation(final String aggregatePropertyKey,
     UnaryFunction<LogicalGraph<VD, ED, GD>, O> aggregationFunc) {
-
     this.aggregatePropertyKey = aggregatePropertyKey;
     this.aggregationFunc = aggregationFunc;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public LogicalGraph<VD, ED, GD> execute(LogicalGraph<VD, ED, GD> graph) throws
     Exception {
@@ -52,8 +78,11 @@ public class Aggregation<VD extends VertexData, ED extends EdgeData, GD
       graph.getGraphDataFactory());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getName() {
-    return "Aggregation";
+    return Aggregation.class.getName();
   }
 }

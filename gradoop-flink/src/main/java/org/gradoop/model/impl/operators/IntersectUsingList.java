@@ -20,30 +20,32 @@ package org.gradoop.model.impl.operators;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.graph.Edge;
-import org.apache.flink.graph.Graph;
 import org.apache.flink.graph.Vertex;
 import org.gradoop.model.EdgeData;
 import org.gradoop.model.GraphData;
 import org.gradoop.model.VertexData;
-import org.gradoop.model.helper.KeySelectors;
-import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.helper.Subgraph;
+import org.gradoop.model.impl.Subgraph;
 
 import java.util.List;
 
-public class IntersectWithSmall<VD extends VertexData, ED extends EdgeData,
+/**
+ * Returns a collection with all logical graphs that exist in both input
+ * collections. Graph equality is based on their identifiers.
+ * <p>
+ * This operator implementation requires that a list of subgraph identifiers
+ * in the resulting graph collections fits into the workers main memory.
+ *
+ * @param <VD> vertex data type
+ * @param <ED> edge data type
+ * @param <GD> graph data type
+ */
+public class IntersectUsingList<VD extends VertexData, ED extends EdgeData,
   GD extends GraphData> extends
-  AbstractBinaryCollectionToCollectionOperator<VD, ED, GD> {
-  @Override
-  protected GraphCollection<VD, ED, GD> executeInternal(
-    GraphCollection<VD, ED, GD> firstCollection,
-    GraphCollection<VD, ED, GD> secondGraphCollection) throws Exception {
-    final DataSet<Subgraph<Long, GD>> newSubgraphs =
-      firstSubgraphs.union(secondSubgraphs)
-        .groupBy(new KeySelectors.GraphKeySelector<GD>())
-        .reduceGroup(new SubgraphGroupReducer<GD>(2));
+  Intersect<VD, ED, GD> {
 
+  @Override
+  protected DataSet<Vertex<Long, VD>> computeNewVertices(
+    DataSet<Subgraph<Long, GD>> newSubgraphs) throws Exception {
     final List<Long> identifiers;
     identifiers =
       secondSubgraphs.map(new MapFunction<Subgraph<Long, GD>, Long>() {
@@ -54,7 +56,7 @@ public class IntersectWithSmall<VD extends VertexData, ED extends EdgeData,
       }).collect();
 
     DataSet<Vertex<Long, VD>> vertices = firstGraph.getVertices();
-    vertices = vertices.filter(new FilterFunction<Vertex<Long, VD>>() {
+    return vertices.filter(new FilterFunction<Vertex<Long, VD>>() {
 
       @Override
       public boolean filter(Vertex<Long, VD> vertex) throws Exception {
@@ -66,25 +68,10 @@ public class IntersectWithSmall<VD extends VertexData, ED extends EdgeData,
         return false;
       }
     });
-
-    DataSet<Edge<Long, ED>> edges = firstGraph.getEdges().join(vertices)
-      .where(new KeySelectors.EdgeSourceVertexKeySelector<ED>())
-      .equalTo(new KeySelectors.VertexKeySelector<VD>())
-      .with(new EdgeJoinFunction<VD, ED>()).join(vertices)
-      .where(new KeySelectors.EdgeTargetVertexKeySelector<ED>())
-      .equalTo(new KeySelectors.VertexKeySelector<VD>())
-      .with(new EdgeJoinFunction<VD, ED>());
-
-    Graph<Long, VD, ED> newGraph = Graph.fromDataSet(vertices, edges, env);
-
-    return new GraphCollection<>(newGraph, newSubgraphs,
-      firstCollection.getVertexDataFactory(),
-      firstCollection.getEdgeDataFactory(),
-      firstCollection.getGraphDataFactory(), env);
   }
 
   @Override
   public String getName() {
-    return "IntersectWithSmall";
+    return IntersectUsingList.class.getName();
   }
 }

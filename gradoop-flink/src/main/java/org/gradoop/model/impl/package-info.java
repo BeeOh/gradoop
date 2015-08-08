@@ -15,12 +15,7 @@
  * along with Gradoop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.operators;
-
-import org.gradoop.model.helper.Predicate;
-import org.gradoop.model.impl.EdgeDataCollection;
-
-public interface EdgeCollectionOperators<T> extends CollectionOperators<T> {
-
-  EdgeDataCollection filter(final Predicate<T> predicateFunction);
-}
+/**
+ * Contains Flink specific model implementations.
+ */
+package org.gradoop.model.impl;

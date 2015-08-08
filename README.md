@@ -9,17 +9,17 @@ the flexible, declarative definition of graph analytical workflows.
 
 ```java
 // load social network from hdfs
-EPGraph db = FlinkGraphStore.fromJsonFile(...).getDatabaseGraph();
+LogicalGraph db = EPGMDatabase.fromJsonFile("hdfs://...").getDatabaseGraph();
 // detect communities
-EPGraphCollection communities = db.callForCollection(new LabelPropagation(...));
+GraphCollection communities = db.callForCollection(new LabelPropagation(...));
 // filter large communities
-EPGraphCollection communities = communities.select((EPGraph g) -> g.vertexCount() > 100);
+GraphCollection communities = communities.select((LogicalGraph g) -> g.vertexCount() > 100);
 // combine them to a single graph
-EPGraph relevantSubgraph = communities.reduce((EPGraph g1, EPGraph g2) -> g1.combine(g2));
+LogicalGraph relevantSubgraph = communities.reduce((LogicalGraph g1, LogicalGraph g2) -> g1.combine(g2));
 // summarize the network based on the city users live in
-EPGraph summarizedGraph = relevantSubgraph.summarize("city");
+LogicalGraph summarizedGraph = relevantSubgraph.summarize("city");
 // write back to HDFS
-summarizedGraph.writeAsJson(...);
+summarizedGraph.writeAsJson("hdfs://...");
 ```
 
 Gradoop is **work in progress** which means APIs may change. It is currently used
@@ -85,7 +85,7 @@ contain a mapping to the logical graphs they are contained in.
 Two persons (Alice and Bob) that have three properties each and are contained in 
 two logical graphs (`"graphs":[0,2]`).
 ```
-// content of nodes.json
+// content of hdfs:///input/nodes.json
 {"id":0,"data":{"gender":"f","city":"Leipzig","name":"Alice"},"meta":{"label":"Person","graphs":[0,2]}}
 {"id":1,"data":{"gender":"m","city":"Leipzig","name":"Bob"},"meta":{"label":"Person","graphs":[0,2]}}
 ```
@@ -96,14 +96,14 @@ in logical graphs. Additionally, edge JSON documents store the obligatory source
 target vertex identifier.
 
 ```
-// content of edges.json
+// content of hdfs:///input/edges.json
 {"id":0,"source":0,"target":1,"data":{"since":2014},"meta":{"label":"knows","graphs":[0,2]}}
 ```
 
 Graphs may also have properties and must have a label (e.g., Community).
 
 ```
-// content of graphs.json
+// content of hdfs:///input/graphs.json
 {"id":0,"data":{"interest":"Databases","vertexCount":3},"meta":{"label":"Community"}}
 {"id":1,"data":{"interest":"Hadoop","vertexCount":3},"meta":{"label":"Community"}}
 {"id":2,"data":{"interest":"Graphs","vertexCount":4},"meta":{"label":"Community"}}
@@ -118,8 +118,11 @@ same label (e.g., Person or Group), each edge represents all edges with the same
 label that connect vertices from the same vertex groups.
 
 ```java
-EPGraphStore graphStore = FlinkGraphStore.fromJsonFile(vertexInputPath, edgeInputPath, env);
-EPGraph schemaGraph = graphStore.getDatabaseGraph().summarizeOnVertexAndEdgeLabels();
+String vertexInputPath = "hdfs:///input/nodes.json";
+String edgeInputPath = "hdfs:///input/edges.json";
+String graphInputPath = "hdfs:///input/graphs.json";
+EPGMDatabase db = FlinkGraphStore.fromJsonFile(vertexInputPath, edgeInputPath, graphInputPath, env);
+LogicalGraph schemaGraph = db.getDatabaseGraph().summarizeOnVertexAndEdgeLabels();
 schemaGraph.writeAsJson(vertexOutputPath, edgeOutputPath, graphOutputPath);
 ```
 
@@ -195,6 +198,14 @@ following line in /etc/hosts
 * And add your hostname to the localhost entry
 
     `127.0.0.1  localhost <your-host-name>`
+
+### Version History
+
+* 0.0.1 first prototype using Hadoop MapReduce and Apache Giraph for operator
+ processing
+* 0.0.2 support for HBase as distributed graph storage
+* 0.0.3 Apache Flink replaces MapReduce and Giraph as operator implementation
+ layer and distributed execution engine
 
 
 

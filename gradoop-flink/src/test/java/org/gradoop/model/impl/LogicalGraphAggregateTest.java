@@ -19,14 +19,13 @@ package org.gradoop.model.impl;
 
 import org.gradoop.model.FlinkTest;
 import org.gradoop.model.helper.UnaryFunction;
-import org.gradoop.model.store.EPGraphStore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class LogicalGraphAggregateTest extends FlinkTest {
-  private EPGraphStore<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+  private EPGMDatabase<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
     graphStore;
 
   public LogicalGraphAggregateTest() {

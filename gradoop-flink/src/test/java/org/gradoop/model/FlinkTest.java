@@ -26,11 +26,9 @@ import org.gradoop.model.impl.DefaultGraphData;
 import org.gradoop.model.impl.DefaultGraphDataFactory;
 import org.gradoop.model.impl.DefaultVertexData;
 import org.gradoop.model.impl.DefaultVertexDataFactory;
-import org.gradoop.model.impl.FlinkGraphStore;
-import org.gradoop.model.store.EPGraphStore;
+import org.gradoop.model.impl.EPGMDatabase;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -103,7 +101,7 @@ public abstract class FlinkTest {
    *
    * @return graph store containing a simple social network for tests.
    */
-  protected EPGraphStore<DefaultVertexData, DefaultEdgeData,
+  protected EPGMDatabase<DefaultVertexData, DefaultEdgeData,
     DefaultGraphData> createSocialGraph() {
 
     // vertices
@@ -349,7 +347,7 @@ public abstract class FlinkTest {
       .createGraphData(3L, LABEL_FORUM, Sets.newHashSet(2L, 3L, 10L),
         Sets.newHashSet(4L, 5L, 16L, 19L, 20L)));
 
-    return FlinkGraphStore.fromCollection(vertices, edges, graphs, env);
+    return EPGMDatabase.fromCollection(vertices, edges, graphs, env);
   }
 
   /**

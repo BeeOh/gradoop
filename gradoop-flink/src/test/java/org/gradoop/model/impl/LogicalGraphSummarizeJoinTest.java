@@ -18,7 +18,7 @@
 package org.gradoop.model.impl;
 
 import org.gradoop.model.impl.operators.Summarization;
-import org.gradoop.model.impl.operators.SummarizationJoin;
+import org.gradoop.model.impl.operators.SummarizationUsingJoin;
 
 public class LogicalGraphSummarizeJoinTest extends LogicalGraphSummarizeTest {
   @Override
@@ -26,7 +26,7 @@ public class LogicalGraphSummarizeJoinTest extends LogicalGraphSummarizeTest {
   getSummarizationImpl(
     String vertexGroupingKey, boolean useVertexLabel, String edgeGroupingKey,
     boolean useEdgeLabel) {
-    return new SummarizationJoin<>(vertexGroupingKey, edgeGroupingKey,
+    return new SummarizationUsingJoin<>(vertexGroupingKey, edgeGroupingKey,
       useVertexLabel, useEdgeLabel);
   }
 }

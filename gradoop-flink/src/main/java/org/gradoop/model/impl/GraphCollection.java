@@ -18,6 +18,7 @@
 package org.gradoop.model.impl;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -37,11 +38,10 @@ import org.gradoop.model.VertexDataFactory;
 import org.gradoop.model.helper.KeySelectors;
 import org.gradoop.model.helper.Order;
 import org.gradoop.model.helper.Predicate;
-import org.gradoop.model.helper.Subgraph;
 import org.gradoop.model.impl.operators.Difference;
-import org.gradoop.model.impl.operators.DifferenceWithSmallResult;
+import org.gradoop.model.impl.operators.DifferenceUsingList;
 import org.gradoop.model.impl.operators.Intersect;
-import org.gradoop.model.impl.operators.IntersectWithSmall;
+import org.gradoop.model.impl.operators.IntersectUsingList;
 import org.gradoop.model.impl.operators.Union;
 import org.gradoop.model.operators.BinaryCollectionToCollectionOperator;
 import org.gradoop.model.operators.BinaryGraphToGraphOperator;
@@ -49,7 +49,6 @@ import org.gradoop.model.operators.GraphCollectionOperators;
 import org.gradoop.model.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.operators.UnaryCollectionToGraphOperator;
 import org.gradoop.model.operators.UnaryGraphToGraphOperator;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -60,24 +59,56 @@ import java.util.List;
  * vertices and edges, the collections contains a single gelly graph
  * representing all subgraphs. Graph data is stored in an additional dataset.
  *
- * @author Martin Junghanns
- * @author Niklas Teichmann
+ * @param <VD> vertex data type
+ * @param <ED> edge data type
+ * @param <GD> graph data type
  */
 public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
-  extends GraphData> implements GraphCollectionOperators<VD, ED, GD> {
+  extends GraphData> implements
+  GraphCollectionOperators<VD, ED, GD> {
 
+  /**
+   * Used to create new vertex data.
+   */
   private final VertexDataFactory<VD> vertexDataFactory;
 
+  /**
+   * Used to create new edge data.
+   */
   private final EdgeDataFactory<ED> edgeDataFactory;
 
+  /**
+   * Used to create new graph data.
+   */
   private final GraphDataFactory<GD> graphDataFactory;
 
-  private ExecutionEnvironment env;
+  /**
+   * Flink execution environment.
+   */
+  private final ExecutionEnvironment env;
 
+  /**
+   * Flink Gelly graph that holds all vertices and edges of the logical
+   * graphs contained in that graph collection.
+   */
   private Graph<Long, VD, ED> graph;
 
+  /**
+   * Graph data associated with the logical graphs in that collection.
+   */
   private DataSet<Subgraph<Long, GD>> subgraphs;
 
+  /**
+   * Creates a graph collection from the given arguments.
+   *
+   * @param graph             Flink Gelly graph
+   * @param subgraphs         graph data associatd with logical graphs in that
+   *                          collection
+   * @param vertexDataFactory vertex data factory
+   * @param edgeDataFactory   edge data factory
+   * @param graphDataFactory  graph data factory
+   * @param env               Flink execution environment
+   */
   public GraphCollection(Graph<Long, VD, ED> graph,
     DataSet<Subgraph<Long, GD>> subgraphs,
     VertexDataFactory<VD> vertexDataFactory,
@@ -91,28 +122,75 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
     this.env = env;
   }
 
+  /**
+   * Returns the vertex data factory.
+   *
+   * @return vertex data factory
+   */
   public VertexDataFactory<VD> getVertexDataFactory() {
     return vertexDataFactory;
   }
 
+  /**
+   * Returns the edge data factory.
+   *
+   * @return edge data factory
+   */
   public EdgeDataFactory<ED> getEdgeDataFactory() {
     return edgeDataFactory;
   }
 
+  /**
+   * Returns the graph data factory.
+   *
+   * @return graph data factory
+   */
   public GraphDataFactory<GD> getGraphDataFactory() {
     return graphDataFactory;
   }
 
+  /**
+   * Returns the gelly graph which contains the vertex and edge set of all
+   * logical graphs in that collection.
+   *
+   * @return Gelly graph
+   */
   public Graph<Long, VD, ED> getGellyGraph() {
     return this.graph;
   }
 
+  /**
+   * Returns the graph data associated with the logical graphs in that
+   * collection.
+   *
+   * @return all logical graph data
+   */
   public DataSet<Subgraph<Long, GD>> getSubgraphs() {
     return this.subgraphs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
-  public LogicalGraph<VD, ED, GD> getGraph(final Long graphID) throws Exception {
+  public long getTotalVertexCount() throws Exception {
+    return this.graph.numberOfVertices();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public long getTotalEdgeCount() throws Exception {
+    return this.graph.numberOfEdges();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public LogicalGraph<VD, ED, GD> getGraph(final Long graphID) throws
+    Exception {
     // filter vertices and edges based on given graph id
     Graph<Long, VD, ED> subGraph = this.graph
       .subgraph(new VertexInGraphFilter<VD>(graphID),
@@ -136,12 +214,18 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
         graphDataFactory);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
-  public GraphCollection<VD, ED, GD> getGraphs(
-    final Long... identifiers) throws Exception {
+  public GraphCollection<VD, ED, GD> getGraphs(final Long... identifiers) throws
+    Exception {
     return getGraphs(Arrays.asList(identifiers));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> getGraphs(
     final List<Long> identifiers) throws Exception {
@@ -168,11 +252,17 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
       newSubGraphs, vertexDataFactory, edgeDataFactory, graphDataFactory, env);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getGraphCount() throws Exception {
     return this.subgraphs.count();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> filter(
     final Predicate<GD> predicateFunction) throws Exception {
@@ -214,76 +304,116 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
       vertexDataFactory, edgeDataFactory, graphDataFactory, env);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> select(
     Predicate<LogicalGraph<VD, ED, GD>> predicateFunction) throws Exception {
     throw new NotImplementedException();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> union(
     GraphCollection<VD, ED, GD> otherCollection) throws Exception {
     return callForCollection(new Union<VD, ED, GD>(), otherCollection);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> intersect(
     GraphCollection<VD, ED, GD> otherCollection) throws Exception {
     return callForCollection(new Intersect<VD, ED, GD>(), otherCollection);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> intersectWithSmall(
     GraphCollection<VD, ED, GD> otherCollection) throws Exception {
-    return callForCollection(new IntersectWithSmall<VD, ED, GD>(),
+    return callForCollection(new IntersectUsingList<VD, ED, GD>(),
       otherCollection);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> difference(
     GraphCollection<VD, ED, GD> otherCollection) throws Exception {
     return callForCollection(new Difference<VD, ED, GD>(), otherCollection);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> differenceWithSmallResult(
     GraphCollection<VD, ED, GD> otherCollection) throws Exception {
-    return callForCollection(new DifferenceWithSmallResult<VD, ED, GD>(),
+    return callForCollection(new DifferenceUsingList<VD, ED, GD>(),
       otherCollection);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> distinct() {
     throw new NotImplementedException();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> sortBy(String propertyKey, Order order) {
     throw new NotImplementedException();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> top(int limit) {
     throw new NotImplementedException();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> apply(
     UnaryGraphToGraphOperator<VD, ED, GD> op) {
     throw new NotImplementedException();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
-  public LogicalGraph<VD, ED, GD> reduce(BinaryGraphToGraphOperator<VD, ED, GD> op) {
+  public LogicalGraph<VD, ED, GD> reduce(
+    BinaryGraphToGraphOperator<VD, ED, GD> op) {
     throw new NotImplementedException();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> callForCollection(
     UnaryCollectionToCollectionOperator<VD, ED, GD> op) {
     return op.execute(this);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GraphCollection<VD, ED, GD> callForCollection(
     BinaryCollectionToCollectionOperator<VD, ED, GD> op,
@@ -291,12 +421,18 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
     return op.execute(this, otherCollection);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public LogicalGraph<VD, ED, GD> callForGraph(
     UnaryCollectionToGraphOperator<VD, ED, GD> op) {
     return op.execute(this);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void writeAsJson(String vertexFile, String edgeFile,
     String graphFile) throws Exception {
@@ -310,11 +446,17 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
       .getDataSet().collect();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <V> Iterable<V> values(Class<V> propertyType, String propertyKey) {
     throw new NotImplementedException();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Collection<GD> collect() throws Exception {
     return this.subgraphs.map(new MapFunction<Subgraph<Long, GD>, GD>() {
@@ -325,64 +467,104 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
     }).collect();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long size() throws Exception {
     return subgraphs.count();
   }
 
-  @Override
-  public void print() throws Exception {
-    subgraphs.print();
-  }
-
-  LogicalGraph<VD, ED, GD> getGraph() {
-    return LogicalGraph
-      .fromGraph(this.graph, null, vertexDataFactory, edgeDataFactory,
-        graphDataFactory);
-  }
-
-
+  /**
+   * Checks if a vertex is contained in the given graph.
+   *
+   * @param <VD> vertex data type
+   */
   private static class VertexInGraphFilter<VD extends VertexData> implements
     FilterFunction<Vertex<Long, VD>> {
 
-    private long graphID;
+    /**
+     * Graph identifier
+     */
+    private final long graphId;
 
-    public VertexInGraphFilter(long graphID) {
-      this.graphID = graphID;
+    /**
+     * Creates a filter
+     *
+     * @param graphId graphId for containment check
+     */
+    public VertexInGraphFilter(long graphId) {
+      this.graphId = graphId;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean filter(Vertex<Long, VD> v) throws Exception {
       return (v.getValue().getGraphCount() > 0) &&
-        v.getValue().getGraphs().contains(graphID);
+        v.getValue().getGraphs().contains(graphId);
     }
   }
 
+  /**
+   * Checks if an edge is contained in the given graph.
+   *
+   * @param <ED> edge data type
+   */
   private static class EdgeInGraphFilter<ED extends EdgeData> implements
     FilterFunction<Edge<Long, ED>> {
 
-    private long graphID;
+    /**
+     * Graph identifier
+     */
+    private final long graphId;
 
-    public EdgeInGraphFilter(long graphID) {
-      this.graphID = graphID;
+    /**
+     * Creates a filter
+     *
+     * @param graphId graphId for containment check
+     */
+    public EdgeInGraphFilter(long graphId) {
+      this.graphId = graphId;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean filter(Edge<Long, ED> e) throws Exception {
       return (e.getValue().getGraphCount() > 0) &&
-        e.getValue().getGraphs().contains(graphID);
+        e.getValue().getGraphs().contains(graphId);
     }
   }
 
+  /**
+   * Checks if a vertex is contained in at least one of the given logical
+   * graphs.
+   *
+   * @param <VD> vertex data type
+   */
   private static class VertexInGraphsFilter<VD extends VertexData> implements
     FilterFunction<Vertex<Long, VD>> {
 
-    List<Long> identifiers;
+    /**
+     * Graph identifiers
+     */
+    private final List<Long> identifiers;
 
+    /**
+     * Creates a filter
+     *
+     * @param identifiers graph identifiers for containment check
+     */
     public VertexInGraphsFilter(List<Long> identifiers) {
       this.identifiers = identifiers;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean filter(Vertex<Long, VD> vertex) throws Exception {
       boolean vertexInGraph = false;
@@ -398,15 +580,31 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
     }
   }
 
+  /**
+   * Checks if an edge is contained in at least one of the given logical graphs.
+   *
+   * @param <ED> edge data type
+   */
   private static class EdgeInGraphsFilter<ED extends EdgeData> implements
     FilterFunction<Edge<Long, ED>> {
 
-    List<Long> identifiers;
+    /**
+     * Graph identifiers
+     */
+    private final List<Long> identifiers;
 
+    /**
+     * Creates a filter
+     *
+     * @param identifiers graph identifiers for containment check
+     */
     public EdgeInGraphsFilter(List<Long> identifiers) {
       this.identifiers = identifiers;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean filter(Edge<Long, ED> e) throws Exception {
       boolean vertexInGraph = false;
