@@ -33,6 +33,11 @@ application-specific subsets from shared sets of vertices and edges, i.e., may
 have common vertices and edges. Additionally, not only vertices and edges but
 also logical graphs have a type label and can have different properties.
 
+Data Model elements (logical graphs, vertices and edges) have a unique identifier
+inside their domain, a single label (e.g., User) and a number of key-value 
+properties (e.g, name = Alice). There is no schema involved, meaning each element
+can have arbitrary number of properties even if they have the same label.
+
 ### Graph operators
 
 The EPGM provides operators for both single graphs as well as collections of 
@@ -76,6 +81,8 @@ The following table contains an overview (GC = GraphCollection, G = Graph).
 
 ### Load data into gradoop
 
+#### JSON
+
 Gradoop supports JSON as input format for vertices, edges and graphs. Besides the 
 unique id, each JSON document stores the properties of the specific entity in an 
 embedded document `data`. Meta information, like the obligatory label, is stored
@@ -109,6 +116,37 @@ Graphs may also have properties and must have a label (e.g., Community).
 {"id":2,"data":{"interest":"Graphs","vertexCount":4},"meta":{"label":"Community"}}
 ```
 
+#### HBase
+
+Gradoop can read and write an EPGM database from HBase using an EPGM store. The
+current implementation is work in progress, at the moment one can read or write
+the whole database. We are working on reading only data that is needed for the
+analysis (e.g., a collection of specific communities).
+
+The following example shows how to create an EPGM Store and how to write a EPGM
+database to it.
+
+```java
+EPGMDataBase epgmDB = EPGMDatabase.fromJsonFile(...);
+
+// do some fancy analysis ...
+
+EPGMStore epgmStore = HBaseEPGMStore.createOrOpenEPGMStore(vertexDataTable, edgeDataTable, graphDataTable);
+epgmDB.writeToHBase(epgmStore);
+epgmStore.close();
+```
+
+You can now read the database from HBase.
+
+```java
+EPGMStore epgmStore = HBaseEPGMStore.createOrOpenEPGMStore(vertexDataTable, edgeDataTable, graphDataTable);
+EPGMDatabase epgmDB = EPGMDatabase.fromHBase(epgmStore);
+
+// do some fancy analysis ...
+
+epgmStore.close()
+```
+
 ### Example: Extract schema graph from possibly large-scale graph
 
 In this example, we use the `summarize` operator to create a condensed version 
@@ -121,7 +159,7 @@ label that connect vertices from the same vertex groups.
 String vertexInputPath = "hdfs:///input/nodes.json";
 String edgeInputPath = "hdfs:///input/edges.json";
 String graphInputPath = "hdfs:///input/graphs.json";
-EPGMDatabase db = FlinkGraphStore.fromJsonFile(vertexInputPath, edgeInputPath, graphInputPath, env);
+EPGMDatabase db = EPGMDatabase.fromJsonFile(vertexInputPath, edgeInputPath, graphInputPath, env);
 LogicalGraph schemaGraph = db.getDatabaseGraph().summarizeOnVertexAndEdgeLabels();
 schemaGraph.writeAsJson(vertexOutputPath, edgeOutputPath, graphOutputPath);
 ```
