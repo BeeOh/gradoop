@@ -2,7 +2,7 @@ package org.biiig.datagen.flink;
 
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.biiig.model.LabeledGraph;
+import org.biiig.fsm.common.LabeledGraph;
 
 import java.util.HashSet;
 import java.util.Set;

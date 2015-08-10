@@ -2,10 +2,8 @@ package org.biiig.datagen.flink;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.util.Collector;
-import org.biiig.model.LabeledGraph;
-import org.biiig.model.LabeledVertex;
-
-import java.net.InetAddress;
+import org.biiig.fsm.common.LabeledGraph;
+import org.biiig.fsm.common.LabeledVertex;
 
 /**
  * Created by peet on 19.06.15.

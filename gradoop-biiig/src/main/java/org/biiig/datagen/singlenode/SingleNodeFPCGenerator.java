@@ -1,7 +1,7 @@
 package org.biiig.datagen.singlenode;
 
-import org.biiig.model.LabeledGraph;
-import org.biiig.model.LabeledVertex;
+import org.biiig.fsm.common.LabeledGraph;
+import org.biiig.fsm.common.LabeledVertex;
 
 import java.util.ArrayList;
 import java.util.List;

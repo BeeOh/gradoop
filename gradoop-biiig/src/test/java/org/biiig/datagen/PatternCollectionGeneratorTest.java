@@ -2,7 +2,7 @@ package org.biiig.datagen;
 
 import org.apache.flink.api.java.DataSet;
 import org.biiig.datagen.flink.FlinkFPCGenerator;
-import org.biiig.model.LabeledGraph;
+import org.biiig.fsm.common.LabeledGraph;
 import org.hamcrest.core.Is;
 import org.junit.Test;
 

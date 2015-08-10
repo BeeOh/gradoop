@@ -8,32 +8,53 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Created by peet on 26.06.15.
+ * Created by p3et on 26.06.15.
+ *
+ * POJO representing a GSpan DFS code
  */
 public class DfsCode implements Comparable<DfsCode>, Cloneable {
-
+  /**
+   * list of contained DFS edges, where index is the discovery position (time)
+   */
   private final List<DfsEdge> dfsEdges = new ArrayList<>();
 
-  public List<DfsEdge> getDfsEdges() {
-    return dfsEdges;
-  }
+  // behaviour
 
-
+  /**
+   * extends the code by a DFS edge
+   * @param dfsEdge DFS edge for extension
+   */
   public void add(DfsEdge dfsEdge) {
     dfsEdges.add(dfsEdge);
   }
 
+  // convenience methods
+
+  /**
+   * returns the last discovered edge
+   * @return last discovered edge
+   */
   public DfsEdge getLastDfsEdge() {
-    return dfsEdges.get(dfsEdges.size()-1);
+    return dfsEdges.get(dfsEdges.size() - 1);
   }
 
+  // override methods
+
+  /**
+   * clone method
+   * @return a clone
+   */
   @Override
   public DfsCode clone() {
     DfsCode clone = new DfsCode();
     clone.getDfsEdges().addAll(dfsEdges);
     return clone;
   }
-
+  /**
+   * comparator based on comparing DFS edges at same discovery positions
+   * @param other other DFS code
+   * @return comparison result
+   */
   @Override
   public int compareTo(DfsCode other) {
     int comparison = 0;
@@ -55,9 +76,13 @@ public class DfsCode implements Comparable<DfsCode>, Cloneable {
     }
     return comparison;
   }
-
+  /**
+   * checks equality to other DFS code
+   * @param other other DFS code
+   * @return true, if considered to be equal
+   */
   @Override
-  public boolean equals(Object other){
+  public boolean equals(Object other) {
     boolean equals = false;
 
     if (other instanceof DfsCode) {
@@ -67,9 +92,12 @@ public class DfsCode implements Comparable<DfsCode>, Cloneable {
 
     return equals;
   }
-
+  /**
+   * generates hash code by aggregating all DFS edge hash codes
+   * @return hash code
+   */
   @Override
-  public int hashCode(){
+  public int hashCode() {
     HashCodeBuilder builder = new HashCodeBuilder();
 
     for (DfsEdge edge : dfsEdges) {
@@ -78,17 +106,18 @@ public class DfsCode implements Comparable<DfsCode>, Cloneable {
 
     return builder.hashCode();
   }
-
+  /**
+   * to string method
+   * @return string representation
+   */
   @Override
-  public String toString(){
-    return "[" + StringUtils.join(dfsEdges,",") +"]";
+  public String toString() {
+    return "[" + StringUtils.join(dfsEdges, ",") + "]";
   }
 
+  // getters and setters
 
-
-
-
-
-
-
+  public List<DfsEdge> getDfsEdges() {
+    return dfsEdges;
+  }
 }
