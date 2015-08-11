@@ -1,0 +1,29 @@
+<html>
+<head>
+    <link rel="stylesheet"
+          href="http://cdn.graphalchemist.com/alchemy.min.css"/>
+</head>
+<body>
+<div class="alchemy" id="alchemy"></div>
+<script src="http://cdn.graphalchemist.com/alchemy.min.js"></script>
+<script src="http://ajax.aspnetcdn.com/ajax/jquery/jquery-1.9.0.js"></script>
+<script type="text/javascript">
+
+    jQuery.getJSON("http://localhost:8080/myapp/json").done(function (data) {
+        var config = {
+            dataSource: data,
+            forceLocked: false,
+            graphHeight: function(){ return 400; },
+            graphWidth: function(){ return 400; },
+            linkDistance: function(){ return 40; },
+            nodeCaption: function(node){
+                return node.caption;}
+        };
+
+        alchemy = new Alchemy(config)
+    });
+
+
+</script>
+</body>
+</html>
