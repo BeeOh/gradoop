@@ -150,13 +150,21 @@ public class EPGraphCollection implements
     return this.subgraphs.count();
   }
 
+  /**
+   * Add a graph to the collection. If the collection already contains the
+   * graph, nothing happens. Otherwise, the SubgraphData, edges and vertices
+   * are added.
+   * @param graph The graph that shall be added.
+   */
   @Override
   public void addGraph(EPGraph graph) {
     Graph<Long, EPFlinkVertexData, EPFlinkEdgeData> newGellyGraph =
       graph.getGellyGraph();
+    //check if this collection is empty, if yes construct a new gelly graph
     if (this.graph == null) {
       this.graph = newGellyGraph;
     } else {
+      //if the collection is not empty, add the vertices and edges
       DataSet<Vertex<Long, EPFlinkVertexData>> vertices =
         this.graph.getVertices().union(newGellyGraph.getVertices())
           .distinct(new VertexKeySelector());
@@ -165,6 +173,7 @@ public class EPGraphCollection implements
           .distinct(new EdgeKeySelector());
       this.graph = Graph.fromDataSet(vertices, edges, env);
     }
+    //add the new graph to the subgraphs
     DataSet<Subgraph<Long, EPFlinkGraphData>> newSubgraphs = env.fromElements(
       new Subgraph<>(graph.getId(),
         new EPFlinkGraphData(graph.getId(), graph.getLabel(),
@@ -176,6 +185,12 @@ public class EPGraphCollection implements
     }
   }
 
+  /**
+   * Remove a graph from the collection. If the collection contains no
+   * graphs, nothing happens. Otherwise, the SubgraphData, edges and vertices
+   * are removed.
+   * @param graphID The id of the graph that shall be removed.
+   */
   @Override
   public void removeGraph(final Long graphID) {
     DataSet<Long> subgraphIDs = this.subgraphs
