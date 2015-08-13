@@ -1,7 +1,5 @@
 package org.biiig.fsm.common;
 
-import org.biiig.fsm.common.LabeledGraph;
-
 import java.util.ArrayList;
 import java.util.Collection;
 

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,6 +21,10 @@ public class DfsCodeMapper implements Cloneable {
    */
   private final GSpanGraph graph;
   /**
+   * DFS code
+   */
+  private final DfsCode dfsCode;
+  /**
    * list of references to vertices of the graph where the index is the
    * discovery position (time); index is the actual mapping information
    */
@@ -34,9 +39,11 @@ public class DfsCodeMapper implements Cloneable {
 
   /**
    * constructor
+   * @param dfsCode DFS code
    * @param graph the graph embedding a DFS code instance
    */
-  public DfsCodeMapper(GSpanGraph graph) {
+  public DfsCodeMapper(DfsCode dfsCode, GSpanGraph graph) {
+    this.dfsCode = dfsCode;
     this.graph = graph;
   }
   /**
@@ -47,11 +54,13 @@ public class DfsCodeMapper implements Cloneable {
     this.mappedVertices.add(vertex);
   }
   /**
-   * adds a new edge to the mapping with index i_max + 1
-   * @param edge added edge
+   * adds a new DFS edge <=> GSpan edge mapping
+   * @param dfsEdge DFS edge
+   * @param edge GSpan edge
    */
-  public void map(GSpanEdge edge) {
-    this.mappedEdges.add(edge);
+  public void map(DfsEdge dfsEdge, GSpanEdge edge) {
+    dfsCode.add(dfsEdge);
+    mappedEdges.add(edge);
   }
 
   // convenience methods
@@ -123,7 +132,7 @@ public class DfsCodeMapper implements Cloneable {
    */
   @Override
   public DfsCodeMapper clone() {
-    DfsCodeMapper clone = new DfsCodeMapper(graph);
+    DfsCodeMapper clone = new DfsCodeMapper(dfsCode.clone(), graph);
     clone.getMappedVertices().addAll(mappedVertices);
     clone.getMappedEdges().addAll(mappedEdges);
     return clone;
@@ -134,7 +143,17 @@ public class DfsCodeMapper implements Cloneable {
    */
   @Override
   public String toString() {
-    return mappedEdges.toString();
+    StringBuffer buffer = new StringBuffer();
+
+    buffer.append("--- Mapper ---");
+
+    Iterator<DfsEdge> dfsEdgeIterator = dfsCode.getDfsEdges().iterator();
+
+    for (GSpanEdge edge : mappedEdges) {
+      buffer.append("\n" + dfsEdgeIterator.next() + " : " + edge.hashCode());
+    }
+
+    return buffer.toString();
   }
 
   // getters and setters
@@ -151,4 +170,7 @@ public class DfsCodeMapper implements Cloneable {
     return mappedEdges;
   }
 
+  public DfsCode getDfsCode() {
+    return dfsCode;
+  }
 }

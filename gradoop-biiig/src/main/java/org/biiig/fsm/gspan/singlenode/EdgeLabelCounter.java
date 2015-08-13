@@ -16,7 +16,6 @@ public class EdgeLabelCounter extends AbstractRunnable {
   public EdgeLabelCounter(GSpanWorker worker) {
     super(worker);
   }
-
   /**
    * count local edge label support
    */

@@ -3,13 +3,13 @@ package org.biiig.fsm.gspan.singlenode;
 
 import org.biiig.fsm.common.AbstractCorrectnessTest;
 import org.biiig.fsm.common.FSMTestData;
+import org.biiig.fsm.common.FSMTestDataGenerator;
 import org.biiig.fsm.common.LabeledGraph;
 import org.biiig.fsm.gspan.common.DfsCode;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 
 
@@ -18,10 +18,11 @@ public class GSpanCorrectnessTest extends AbstractCorrectnessTest {
   @Test
   public void test() {
     Collection<FSMTestData> testDataSets = new ArrayList<>();
-    testDataSets.add(getSimpleTestData());
-    testDataSets.add(getTestDataWithCycles());
-    testDataSets.add(getTestDataWithParallelEdges());
-    testDataSets.add(getTestDataWithLoops());
+    testDataSets.add(FSMTestDataGenerator.newSimpleTestData());
+    testDataSets.add(FSMTestDataGenerator.newTestDataWithCycles());
+    testDataSets.add(FSMTestDataGenerator.newTestDataWithParallelEdges());
+    testDataSets.add(FSMTestDataGenerator.newTestDataWithMirroredPath());
+    testDataSets.add(FSMTestDataGenerator.newTestDataWithLoops());
 
     for (FSMTestData testData : testDataSets) {
 
@@ -54,29 +55,6 @@ public class GSpanCorrectnessTest extends AbstractCorrectnessTest {
       checkAssertions(master.getFrequentSubgraphs().keySet(),
         testData.getExpectedResult());
 
-    }
-  }
-
-  public void distribute(Collection<LabeledGraph> searchSpace,
-    GSpanMaster master) {
-
-    Collection<GSpanWorker> workers =  master.getWorkers();
-
-    int graphsPerWorker = searchSpace.size() / workers.size();
-
-    Long graphCount = 0l;
-
-    Iterator<GSpanWorker> workerIterator = workers.iterator();
-    GSpanWorker worker = workerIterator.next();
-
-    for(LabeledGraph graph : searchSpace) {
-
-      if(graphCount >= graphsPerWorker) {
-        worker = workerIterator.next();
-      }
-
-      graphCount++;
-      worker.getGraphs().add(graph);
     }
   }
 }

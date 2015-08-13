@@ -83,11 +83,24 @@ public class DfsCode implements Comparable<DfsCode>, Cloneable {
    */
   @Override
   public boolean equals(Object other) {
-    boolean equals = false;
+    boolean equals = true;
 
     if (other instanceof DfsCode) {
       DfsCode otherDfsCode = (DfsCode) other;
-      equals = this.dfsEdges.equals(otherDfsCode.dfsEdges);
+
+      if (this.dfsEdges.size() == otherDfsCode.dfsEdges.size()) {
+
+        Iterator<DfsEdge> ownIterator = dfsEdges.iterator();
+        Iterator<DfsEdge> otherIterator = otherDfsCode.dfsEdges
+          .iterator();
+
+        while (equals && ownIterator.hasNext()) {
+          equals = ownIterator.next().equals(otherIterator.next());
+        }
+
+      } else {
+        equals = false;
+      }
     }
 
     return equals;

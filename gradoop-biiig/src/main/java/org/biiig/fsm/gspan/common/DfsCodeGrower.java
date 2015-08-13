@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by peet on 06.08.15.
+ * Created by p3et on 06.08.15.
  *
  * grows a DFS code and a given mapper by a given edge,
  * if edge is potentially valid for growth (pre-growth pruning only)
@@ -12,23 +12,18 @@ import java.util.List;
 public class DfsCodeGrower {
 
   /**
-   * resulting DFS code
-   */
-  private DfsCode grownCode = null;
-  /**
-   * resulting DFS code - graph mappers
+   * resulting DFS code - graph mapper
    */
   private DfsCodeMapper grownMapper = null;
 
   /**
    * start growth validation and generate new code and mapper, if valid
-   * @param code initial DFS code
    * @param mapper initial mapper
    * @param edge growth candidate edge
    * @return  true, if edge was valid for growth and thus a new code and a new
    *          mapper were generated
    */
-  public boolean grow(DfsCode code, DfsCodeMapper mapper, GSpanEdge edge) {
+  public boolean grow(DfsCodeMapper mapper, GSpanEdge edge) {
 
     // 1st pruning step :
     // edge is lexicographically greater or equal to the root edge and
@@ -37,7 +32,7 @@ public class DfsCodeGrower {
       !mapper.contains(edge)) {
 
       // load data objects necessary for further pruning decisions
-      List<GSpanVertex> rightmostPath = getRightMostTail(code, mapper);
+      List<GSpanVertex> rightmostPath = getRightMostTail(mapper);
       GSpanVertex rightmostVertex = mapper.getRightmostVertex();
 
       GSpanVertex sourceVertex = edge.getSourceVertex();
@@ -81,7 +76,7 @@ public class DfsCodeGrower {
         // if source vertex is not mapped (forward growth)
         if (sourceVertexPosition < 0) {
           // report source vertex as unmapped vertex
-          newVertex = targetVertex;
+          newVertex = sourceVertex;
           // set new position by adding one to rightmost position
           sourceVertexPosition = targetVertexPosition + 1;
         }
@@ -125,25 +120,22 @@ public class DfsCodeGrower {
           targetVertexPosition, targetVertex.getLabel(), false, edge.getLabel(),
           sourceVertexPosition, sourceVertex.getLabel()
         );
-
       }
 
       // if a dfsEdge was instantiated, edge valid for growth
       if (dfsEdge != null) {
-        // grow DFS code by new DFS edge
-        grownCode = code.clone();
-        grownCode.add(dfsEdge);
 
-        // add edge to mapper
+         // add edge to mapper
         grownMapper = mapper.clone();
-        grownMapper.map(edge);
 
         if (newVertex != null) {
           grownMapper.map(newVertex);
         }
+
+        grownMapper.map(dfsEdge, edge);
       }
     }
-    return grownCode != null;
+    return grownMapper != null;
   }
   /**
    * encapsulation of rightmost tail determination, e.g., the shortest path
@@ -151,13 +143,13 @@ public class DfsCodeGrower {
    * used instead of path as rightmost vertex is checked separately and thus
    * fewer comparisons are necessary when checking containment
    *
-   * @param dfsCode DFS code
    * @param mapper mapper to GSPan graph
    * @return List of vertices in inverse order of discovery position (time)
    * without rightmost vertex; DFS-code tree root vertex will be last entry
    */
-  private List<GSpanVertex> getRightMostTail(DfsCode dfsCode,
-    DfsCodeMapper mapper) {
+  private List<GSpanVertex> getRightMostTail(DfsCodeMapper mapper) {
+
+    DfsCode dfsCode = mapper.getDfsCode();
     List<GSpanVertex> rightMostTail = new ArrayList<>();
 
     // get last discovery position of vertex before rightmost vertex
@@ -179,10 +171,6 @@ public class DfsCodeGrower {
     }
 
     return rightMostTail;
-  }
-
-  public DfsCode getGrownCode() {
-    return grownCode;
   }
 
   public DfsCodeMapper getGrownMapper() {

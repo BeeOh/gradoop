@@ -3,15 +3,14 @@ package org.biiig.fsm.gspan.singlenode;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import org.biiig.fsm.gspan.common.DfsCode;
-import org.biiig.fsm.gspan.common.DfsCodeMapper;
-import org.biiig.fsm.gspan.common.GSpanGraph;
 import org.biiig.fsm.common.LabeledGraph;
+import org.biiig.fsm.gspan.common.SearchSpaceItem;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * represents a worker in a single node GSpan environment,
@@ -60,8 +59,11 @@ public class GSpanWorker {
   /**
    * search space of GSpan graphs on this worker
    */
-  private Map<DfsCode, Map<GSpanGraph,
-    Collection<DfsCodeMapper>>> dfsCodeSupporterMappersMap = new TreeMap<>();
+  private List<SearchSpaceItem> searchSpace = new ArrayList<>();
+  /**
+   *
+   */
+  private Map<DfsCode, Integer> dfsCodeSupports = new HashMap<>();
   /**
    * collection of globally frequent and locally occurring DFS codes
    */
@@ -116,6 +118,13 @@ public class GSpanWorker {
   }
 
   /**
+   * start counting minimum DFS codes in own thread
+   */
+  public void countDfsCodeSupport() {
+    thread = new Thread(new DfsCodeCounter(this));
+    thread.start();
+  }
+  /**
    * create local copy of globally frequent DFS codes
    */
   public void consumeFrequentDfsCodes() {
@@ -139,24 +148,6 @@ public class GSpanWorker {
     thread.start();
   }
 
-  // convenience methods
-
-  /**
-   * determine the local support of DFS codes
-   * @return map of locally occurring DFS codes and support count
-   */
-  public Map<DfsCode, Integer> getDfsCodeSupports() {
-    Map<DfsCode, Integer> dfsCodeSupports = new HashMap<>();
-
-    for (Map.Entry<DfsCode, Map<GSpanGraph, Collection<DfsCodeMapper>>>
-      dfsCodeSupporterMappers : dfsCodeSupporterMappersMap.entrySet()) {
-      dfsCodeSupports.put(dfsCodeSupporterMappers.getKey(),
-        dfsCodeSupporterMappers.getValue().size());
-    }
-
-    return dfsCodeSupports;
-  }
-
   // override methods
 
   /**
@@ -165,7 +156,7 @@ public class GSpanWorker {
    */
   @Override
   public String toString() {
-    return thread.toString() + "(" + graphs.size() + " graphs)";
+    return "Worker " + this.partition + " (" + graphs.size() + " graphs)";
   }
 
   // getters and setters
@@ -193,11 +184,6 @@ public class GSpanWorker {
     return vertexLabelSupports;
   }
 
-  public Map<DfsCode, Map<GSpanGraph, Collection<DfsCodeMapper>>>
-  getDfsCodeSupporterMappersMap() {
-    return dfsCodeSupporterMappersMap;
-  }
-
   public Collection<DfsCode> getGrowableDfsCodes() {
     return growableDfsCodes;
   }
@@ -213,12 +199,13 @@ public class GSpanWorker {
     return frequentSubgraphs;
   }
 
+  public Map<DfsCode, Integer> getDfsCodeSupports() {
+    return dfsCodeSupports;
+  }
 
-
-
-
-
-
+  public List<SearchSpaceItem> getSearchSpace() {
+    return searchSpace;
+  }
 
 
 }

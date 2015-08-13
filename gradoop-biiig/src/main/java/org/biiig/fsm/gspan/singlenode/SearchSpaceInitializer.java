@@ -1,5 +1,6 @@
 package org.biiig.fsm.gspan.singlenode;
 
+import com.google.common.collect.Lists;
 import org.biiig.fsm.gspan.common.DfsCode;
 import org.biiig.fsm.gspan.common.DfsCodeMapper;
 import org.biiig.fsm.gspan.common.DfsEdge;
@@ -9,14 +10,16 @@ import org.biiig.fsm.gspan.common.GSpanVertex;
 import org.biiig.fsm.common.LabeledEdge;
 import org.biiig.fsm.common.LabeledGraph;
 import org.biiig.fsm.common.LabeledVertex;
+import org.biiig.fsm.gspan.common.SearchSpaceItem;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Created by peet on 17.07.15.
  */
-public class SearchSpaceInitializer extends AbstractDfsEncoder {
+public class SearchSpaceInitializer extends AbstractRunnable {
   /**
    * constructor
    * @param worker worker initializing the miner
@@ -33,11 +36,21 @@ public class SearchSpaceInitializer extends AbstractDfsEncoder {
   @Override
   public void run() {
     // ensure an empty search space
-    worker.getDfsCodeSupporterMappersMap().clear();
+    worker.getSearchSpace().clear();
 
     // for each graph
     for (LabeledGraph graph : worker.getGraphs()) {
-      GSpanGraph supporter = new GSpanGraph();
+
+      // create search space item
+      SearchSpaceItem item = new SearchSpaceItem();
+      worker.getSearchSpace().add(item);
+      GSpanGraph searchGraph = item.getGraph();
+
+      // create index for one edge graph DFS codes
+      Map<DfsCode, List<DfsCodeMapper>> codeMappersIndex = new HashMap<>();
+      item.setDfsCodeMappersIndex(codeMappersIndex);
+
+      // map from original to label-pruned and label-encoded search graph
       Map<LabeledVertex, GSpanVertex> vertexMap = new HashMap<>();
 
       // for each edge
@@ -88,7 +101,7 @@ public class SearchSpaceInitializer extends AbstractDfsEncoder {
 
               // create GSpan source vertex if not already mapped
               if (gsSourceVertex == null) {
-                gsSourceVertex = supporter.newVertex(gsSourceLabel);
+                gsSourceVertex = searchGraph.newVertex(gsSourceLabel);
                 vertexMap.put(sourceVertex, gsSourceVertex);
               }
 
@@ -96,17 +109,17 @@ public class SearchSpaceInitializer extends AbstractDfsEncoder {
               if (sourceVertex == targetVertex) {
                 gsTargetVertex = gsSourceVertex;
               } else if (gsTargetVertex == null) {
-                gsTargetVertex = supporter.newVertex(gsTargetLabel);
+                gsTargetVertex = searchGraph.newVertex(gsTargetLabel);
                 vertexMap.put(targetVertex, gsTargetVertex);
               }
 
               // create GSpan edge
-              GSpanEdge gsEdge = supporter.newEdge(gsSourceVertex, gsEdgeLabel,
-                gsTargetVertex);
+              GSpanEdge gsEdge = searchGraph.newEdge(
+                gsSourceVertex, gsEdgeLabel, gsTargetVertex);
 
-              // create 1-edge DFS code and mapper
-              DfsCode code = new DfsCode();
-              DfsCodeMapper mapper = new DfsCodeMapper(supporter);
+              // create 1-edge DFS code mapper
+              DfsCodeMapper mapper = new DfsCodeMapper(new DfsCode(),
+                searchGraph);
 
               DfsEdge dfsEdge;
 
@@ -132,16 +145,24 @@ public class SearchSpaceInitializer extends AbstractDfsEncoder {
 
               // add DFS edge to empty code (add root edge) and GSpan edge to
               // mapper
-              code.add(dfsEdge);
-              mapper.map(gsEdge);
+              mapper.map(dfsEdge, gsEdge);
 
-              // report 1-edge DFS code and corresponding mapper
-              addDfsCodeSupporterMapper(code, supporter, mapper);
+              // add mapper to index
+              DfsCode code = mapper.getDfsCode();
+
+              List<DfsCodeMapper> sameCodeMappers = codeMappersIndex.get(code);
+
+              if (sameCodeMappers == null) {
+                codeMappersIndex.put(code, Lists.newArrayList(mapper));
+              } else {
+                sameCodeMappers.add(mapper);
+              }
             }
           }
         }
       }
     }
   }
+
 }
 

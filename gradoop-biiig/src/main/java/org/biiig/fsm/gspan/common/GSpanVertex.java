@@ -39,7 +39,7 @@ public class GSpanVertex implements Comparable<GSpanVertex> {
    */
   @Override
   public String toString() {
-    return "(" + label + ":" + hashCode() + ")";
+    return "(" + label + ")";
   }
 
   // getters and setters

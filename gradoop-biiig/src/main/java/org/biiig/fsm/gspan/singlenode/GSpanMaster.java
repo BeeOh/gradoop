@@ -9,6 +9,7 @@ import org.biiig.fsm.common.LabeledGraph;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
@@ -29,7 +30,7 @@ public class GSpanMaster {
   /**
    * worker collection
    */
-  private final Collection<GSpanWorker> workers = new ArrayList<>();
+  private final List<GSpanWorker> workers = new ArrayList<>();
   /**
    * global supports of vertex labels
    */
@@ -74,15 +75,16 @@ public class GSpanMaster {
   // behaviour
 
   /**
-   * constructor, creates workers according to the number of available CPU cores
+   * constructor
+   * creates workers according to the number of available CPU cores
    */
   public GSpanMaster() {
     int numberOfWorkers = Runtime.getRuntime().availableProcessors();
 
     for (int i = 0; i < numberOfWorkers; i++) {
       this.workers.add(new GSpanWorker(this, i));
-      this.partitionedFrequentDfsCodeSupports.put(i, new HashMap<DfsCode,
-        Integer>());
+      this.partitionedFrequentDfsCodeSupports.put(i,
+        new HashMap<DfsCode, Integer>());
     }
   }
   /**
@@ -107,21 +109,27 @@ public class GSpanMaster {
 
     // single edge DFS codes
     initializeSearchSpace();
-    aggregateDfsCodeSupports();
+
+    countDfsCodeSupport();
+    aggregateDfsCodeSupport();
     resetGrowableDfsCodes();
+
 
     // grow frequent DFS codes
     while (!growableDfsCodes.isEmpty()) {
       broadcastGrowableDfsCodes();
       growFrequentDfsCodes();
-      aggregateDfsCodeSupports();
+      countDfsCodeSupport();
+      aggregateDfsCodeSupport();
       resetGrowableDfsCodes();
     }
+
 
     // generate graph from frequent DFS codes
     generateGraphsFromFrequentDfsCodes();
     collectFrequentSubgraphs();
   }
+
   /**
    * encapsulation of field initializers
    * @param threshold minimum support frequency
@@ -143,7 +151,6 @@ public class GSpanMaster {
     }
     joinWorkerThreads();
   }
-
   /**
    * starts counting edge label support on all workers
    */
@@ -271,9 +278,18 @@ public class GSpanMaster {
     }
   }
   /**
+   * starts counting minimum DFS code support on all workers
+   */
+  private void countDfsCodeSupport() {
+    for (GSpanWorker worker : workers) {
+      worker.countDfsCodeSupport();
+    }
+    joinWorkerThreads();
+  }
+  /**
    * starts aggregation of global DFS code supports
    */
-  private void aggregateDfsCodeSupports() {
+  private void aggregateDfsCodeSupport() {
     dfsCodeSupports.clear();
 
     // for each worker
@@ -372,7 +388,7 @@ public class GSpanMaster {
 
   // getters and setters
 
-  public Collection<GSpanWorker> getWorkers() {
+  public List<GSpanWorker> getWorkers() {
     return workers;
   }
 
