@@ -18,6 +18,7 @@
 package org.gradoop.model.impl;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.JoinFunction;
@@ -42,6 +43,7 @@ import org.gradoop.model.impl.operators.Difference;
 import org.gradoop.model.impl.operators.DifferenceUsingList;
 import org.gradoop.model.impl.operators.Intersect;
 import org.gradoop.model.impl.operators.IntersectUsingList;
+import org.gradoop.model.impl.operators.Selection;
 import org.gradoop.model.impl.operators.Union;
 import org.gradoop.model.operators.BinaryCollectionToCollectionOperator;
 import org.gradoop.model.operators.BinaryGraphToGraphOperator;
@@ -53,6 +55,7 @@ import org.gradoop.model.operators.UnaryGraphToGraphOperator;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a collection of graphs inside the EPGM. As graphs may share
@@ -265,6 +268,92 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
    * {@inheritDoc}
    */
   @Override
+  public void addGraph(LogicalGraph<VD, ED, GD> graph) {
+    Graph<Long, VD, ED> newGellyGraph = graph.getGellyGraph();
+    //check if this collection is empty, if yes construct a new gelly graph
+    if (this.graph == null) {
+      this.graph = newGellyGraph;
+    } else {
+      //if the collection is not empty, add the vertices and edges
+      DataSet<Vertex<Long, VD>> vertices =
+        this.graph.getVertices().union(newGellyGraph.getVertices())
+          .distinct(new KeySelectors.VertexKeySelector<VD>());
+      DataSet<Edge<Long, ED>> edges =
+        this.graph.getEdges().union(newGellyGraph.getEdges())
+          .distinct(new KeySelectors.EdgeKeySelector<ED>());
+      this.graph = Graph.fromDataSet(vertices, edges, env);
+    }
+    //add the new graph to the subgraphs
+    DataSet<Subgraph<Long, GD>> newSubgraphs = env.fromElements(
+      new Subgraph<>(graph.getId(), graphDataFactory
+        .createGraphData(graph.getId(), graph.getLabel(),
+          graph.getProperties())));
+    if (this.subgraphs == null) {
+      this.subgraphs = newSubgraphs;
+    } else {
+      this.subgraphs = this.subgraphs.union(newSubgraphs);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void removeGraph(final Long graphID) throws Exception {
+    DataSet<Long> subgraphIDs =
+      this.subgraphs.map(new MapFunction<Subgraph<Long, GD>, Long>() {
+        @Override
+        public Long map(Subgraph<Long, GD> subgraph) throws Exception {
+          return subgraph.getId();
+        }
+      });
+
+    Set<Long> graphSet = Sets.newHashSet(subgraphIDs.collect());
+    boolean idWasInSet = graphSet.remove(graphID);
+    if (idWasInSet) {
+      final Set<Long> remainingGraphs = graphSet;
+      DataSet<Vertex<Long, VD>> vertices = this.graph.getVertices();
+      vertices = vertices.filter(new FilterFunction<Vertex<Long, VD>>() {
+        @Override
+        public boolean filter(Vertex<Long, VD> vertex) throws Exception {
+          for (Long id : vertex.getValue().getGraphs()) {
+            if (remainingGraphs.contains(id)) {
+              return true;
+            }
+          }
+          return false;
+        }
+      });
+
+      DataSet<Edge<Long, ED>> edges = this.graph.getEdges();
+      edges = edges.filter(new FilterFunction<Edge<Long, ED>>() {
+        @Override
+        public boolean filter(Edge<Long, ED> edge) throws Exception {
+          for (Long id : edge.getValue().getGraphs()) {
+            if (remainingGraphs.contains(id)) {
+              return true;
+            }
+          }
+          return false;
+        }
+      });
+      Graph<Long, VD, ED> newGellyGraph =
+        Graph.fromDataSet(vertices, edges, env);
+      this.graph = newGellyGraph;
+    }
+    this.subgraphs =
+      this.subgraphs.filter(new FilterFunction<Subgraph<Long, GD>>() {
+        @Override
+        public boolean filter(Subgraph<Long, GD> subgraph) throws Exception {
+          return !(subgraph.getId().equals(graphID));
+        }
+      });
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public GraphCollection<VD, ED, GD> filter(
     final Predicate<GD> predicateFunction) throws Exception {
     // find subgraphs matching the predicate
@@ -311,7 +400,7 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
   @Override
   public GraphCollection<VD, ED, GD> select(
     Predicate<LogicalGraph<VD, ED, GD>> predicateFunction) throws Exception {
-    throw new NotImplementedException();
+    return callForCollection(new Selection<>(predicateFunction));
   }
 
   /**

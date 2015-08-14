@@ -94,6 +94,24 @@ public interface GraphCollectionOperators<VD extends VertexData, ED extends
   long getGraphCount() throws Exception;
 
   /**
+   * Add a logical graph to the collection. If the collection already
+   * contains the graph, nothing happens. Otherwise, the associated graph data,
+   * edges and vertices are added.
+   *
+   * @param graph graph that shall be added.
+   */
+  void addGraph(LogicalGraph<VD, ED, GD> graph);
+
+  /**
+   * Remove a graph from the collection. If the collection contains no
+   * graphs, nothing happens. Otherwise, the associated graph data, edges and
+   * vertices are removed.
+   *
+   * @param graphID The id of the graph that shall be removed.
+   */
+  void removeGraph(Long graphID) throws Exception;
+
+  /**
    * Filter containing graphs based on their associated graph data.
    *
    * @param predicateFunction predicate function for graph data
