@@ -307,7 +307,6 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
           return subgraph.getId();
         }
       });
-
     Set<Long> graphSet = Sets.newHashSet(subgraphIDs.collect());
     boolean idWasInSet = graphSet.remove(graphID);
     if (idWasInSet) {
@@ -497,7 +496,7 @@ public class GraphCollection<VD extends VertexData, ED extends EdgeData, GD
    */
   @Override
   public GraphCollection<VD, ED, GD> callForCollection(
-    UnaryCollectionToCollectionOperator<VD, ED, GD> op) {
+    UnaryCollectionToCollectionOperator<VD, ED, GD> op) throws Exception {
     return op.execute(this);
   }
 

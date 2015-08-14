@@ -50,7 +50,7 @@ public class Selection<VD extends VertexData, ED extends EdgeData, GD extends
    */
   @Override
   public GraphCollection<VD, ED, GD> execute(
-    GraphCollection<VD, ED, GD> collection) {
+    GraphCollection<VD, ED, GD> collection) throws Exception {
     ExecutionEnvironment env = collection.getGellyGraph().getContext();
     // construct a dataset containing all ids of the subgraphs
     DataSet<Long> subgraphIDs =
@@ -58,22 +58,20 @@ public class Selection<VD extends VertexData, ED extends EdgeData, GD extends
     GraphCollection<VD, ED, GD> resultCollection =
       new GraphCollection<>(null, null, collection.getVertexDataFactory(),
         collection.getEdgeDataFactory(), collection.getGraphDataFactory(), env);
-    try {
-      Set<Long> subgraphSet = new HashSet<>(subgraphIDs.collect());
-      // for every graph in the collection, test if the predicate is returns
-      // true
-      for (long id : subgraphSet) {
-        LogicalGraph<VD, ED, GD> graph = collection.getGraph(id);
-        if (predicate.filter(graph)) {
-          // if the predicate is fulfilled, add the graph to the new collection
-          resultCollection.addGraph(graph);
-        }
+    if (subgraphIDs.count() == 0) {
+      return resultCollection;
+    }
+    Set<Long> subgraphSet = new HashSet<>(subgraphIDs.collect());
+    // for every graph in the collection, test if the predicate is returns
+    // true
+    for (long id : subgraphSet) {
+      LogicalGraph<VD, ED, GD> graph = collection.getGraph(id);
+
+      if (predicate.filter(graph)) {
+        // if the predicate is fulfilled, add the graph to the new collection
+        resultCollection.addGraph(graph);
       }
-    } catch (Exception e) {
-      resultCollection =
-        new GraphCollection<>(null, null, collection.getVertexDataFactory(),
-          collection.getEdgeDataFactory(), collection.getGraphDataFactory(),
-          env);
+
     }
     return resultCollection;
   }

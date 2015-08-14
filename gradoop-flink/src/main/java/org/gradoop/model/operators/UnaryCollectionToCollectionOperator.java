@@ -38,5 +38,6 @@ public interface UnaryCollectionToCollectionOperator<VD extends VertexData,
    * @param collection input collection
    * @return operator result
    */
-  GraphCollection<VD, ED, GD> execute(GraphCollection<VD, ED, GD> collection);
+  GraphCollection<VD, ED, GD> execute(
+    GraphCollection<VD, ED, GD> collection) throws Exception;
 }

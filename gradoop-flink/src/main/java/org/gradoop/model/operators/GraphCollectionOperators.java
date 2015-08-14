@@ -254,7 +254,7 @@ public interface GraphCollectionOperators<VD extends VertexData, ED extends
    * @return result of given operator
    */
   GraphCollection<VD, ED, GD> callForCollection(
-    UnaryCollectionToCollectionOperator<VD, ED, GD> op);
+    UnaryCollectionToCollectionOperator<VD, ED, GD> op) throws Exception;
 
   /**
    * Calls the given binary collection to collection operator using that
