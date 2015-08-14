@@ -13,7 +13,7 @@ import java.util.List;
  *
  * POJO representing a GSpan DFS code
  */
-public class DfsCode implements Comparable<DfsCode>, Cloneable, Serializable {
+public class DfsCode implements Comparable<DfsCode>, Serializable {
   /**
    * list of contained DFS edges, where index is the discovery position (time)
    */
@@ -38,19 +38,18 @@ public class DfsCode implements Comparable<DfsCode>, Cloneable, Serializable {
   public DfsEdge getLastDfsEdge() {
     return dfsEdges.get(dfsEdges.size() - 1);
   }
-
-  // override methods
-
   /**
    * clone method
    * @return a clone
    */
-  @Override
-  public DfsCode clone() {
+  public DfsCode newChild() {
     DfsCode clone = new DfsCode();
     clone.getDfsEdges().addAll(dfsEdges);
     return clone;
   }
+
+  // override methods
+
   /**
    * comparator based on comparing DFS edges at same discovery positions
    * @param other other DFS code
@@ -65,7 +64,8 @@ public class DfsCode implements Comparable<DfsCode>, Cloneable, Serializable {
 
     while (comparison == 0 && ownIterator.hasNext() &&
       otherIterator.hasNext()) {
-      comparison = ownIterator.next().compareTo(otherIterator.next());
+      comparison = new DfsEdgeComparator().compare(
+        ownIterator.next(), otherIterator.next());
     }
 
     if (comparison == 0) {

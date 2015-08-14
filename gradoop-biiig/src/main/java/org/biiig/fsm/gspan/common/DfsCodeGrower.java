@@ -28,8 +28,8 @@ public class DfsCodeGrower {
     // 1st pruning step :
     // edge is lexicographically greater or equal to the root edge and
     // edge was not already mapped
-    if (edge.compareTo(mapper.getFirstMappedEdge()) >= 0 &&
-      !mapper.contains(edge)) {
+    if (new GSpanEdgeComparator().compare(edge, mapper.getFirstMappedEdge()) >=
+      0 && !mapper.contains(edge)) {
 
       // load data objects necessary for further pruning decisions
       List<GSpanVertex> rightmostPath = getRightMostTail(mapper);
@@ -126,7 +126,7 @@ public class DfsCodeGrower {
       if (dfsEdge != null) {
 
          // add edge to mapper
-        grownMapper = mapper.clone();
+        grownMapper = mapper.newChild();
 
         if (newVertex != null) {
           grownMapper.map(newVertex);

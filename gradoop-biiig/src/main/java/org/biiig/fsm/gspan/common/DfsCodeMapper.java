@@ -15,7 +15,7 @@ import java.util.List;
  * discovery positions (times) of vertices and correspondences in between DFS
  * edges and GSpan graph edges
  */
-public class DfsCodeMapper implements Cloneable {
+public class DfsCodeMapper {
   /**
    * graph embedding a DFS code instance
    */
@@ -116,6 +116,16 @@ public class DfsCodeMapper implements Cloneable {
     return mappedVertices.get(mappedVertices.size() - 1);
   }
   /**
+   * clone method
+   * @return a clone
+   */
+  public DfsCodeMapper newChild() {
+    DfsCodeMapper clone = new DfsCodeMapper(dfsCode.newChild(), graph);
+    clone.getMappedVertices().addAll(mappedVertices);
+    clone.getMappedEdges().addAll(mappedEdges);
+    return clone;
+  }
+  /**
    * returns the mapped discovery position (time) of a vertex in a DFS code
    * @param vertex affected vertex
    * @return discovery position (time)
@@ -126,17 +136,6 @@ public class DfsCodeMapper implements Cloneable {
 
   // override methods
 
-  /**
-   * clone method
-   * @return a clone
-   */
-  @Override
-  public DfsCodeMapper clone() {
-    DfsCodeMapper clone = new DfsCodeMapper(dfsCode.clone(), graph);
-    clone.getMappedVertices().addAll(mappedVertices);
-    clone.getMappedEdges().addAll(mappedEdges);
-    return clone;
-  }
   /**
    * to string method
    * @return string representation

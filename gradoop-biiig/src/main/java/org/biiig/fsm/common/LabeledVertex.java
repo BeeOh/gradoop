@@ -5,8 +5,7 @@ package org.biiig.fsm.common;
  *
  * Created by peet on 25.06.15.
  */
-public class LabeledVertex extends LabeledGraphElement
-  implements Comparable<LabeledVertex> {
+public class LabeledVertex extends LabeledGraphElement {
   /**
    * constructor
    * @param label vertex label
@@ -17,15 +16,6 @@ public class LabeledVertex extends LabeledGraphElement
 
   // override methods
 
-  /**
-   * comparator
-   * @param other other vertex
-   * @return comparison result
-   */
-  @Override
-  public int compareTo(LabeledVertex other) {
-    return this.getLabel().compareTo(other.getLabel());
-  }
   /**
    * to string method
    * @return string representation

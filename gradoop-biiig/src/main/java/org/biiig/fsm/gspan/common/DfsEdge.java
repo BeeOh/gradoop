@@ -12,7 +12,7 @@ import java.io.Serializable;
  * GSpan Technical Report but extended by a direction bit expressing if the
  * edge was traversed in direction or inversely
  */
-public class DfsEdge implements Comparable<DfsEdge>, Serializable {
+public class DfsEdge implements Serializable {
   /**
    * discovery position (time) of the traversal start vertex
    */
@@ -61,7 +61,7 @@ public class DfsEdge implements Comparable<DfsEdge>, Serializable {
 
   // convenience methods
 
-  private boolean isBackward() {
+  public boolean isBackward() {
     // = included for self-loops
     return toPosition <= fromPosition;
   }
@@ -72,103 +72,6 @@ public class DfsEdge implements Comparable<DfsEdge>, Serializable {
 
   // override methods
 
-  /**
-   * implementation of GSpan lexicographic ordering
-   * @param other other DFS edge
-   * @return comparison result
-   */
-  @Override
-  public int compareTo(DfsEdge other) {
-    int comparison;
-
-    // same direction
-    if (this.isForward() == other.isForward()) {
-
-      // both forward
-      if (this.isForward()) {
-
-        // starts from same position
-        if (this.fromPosition == other.fromPosition) {
-
-          // inherit edge comparison by labels (lexicographically order)
-          comparison = compareLabelsAndDirection(other);
-
-          // starts from a later visited vertex
-        } else if (this.fromPosition > other.fromPosition) {
-          comparison = -1;
-
-          // starts from an earlier visited vertex
-        } else {
-          comparison = 1;
-        }
-
-        // both backward
-      } else {
-
-        // refers same position
-        if (this.toPosition == other.toPosition) {
-
-          // inherit edge comparison by labels (lexicographically order)
-          comparison = compareLabelsAndDirection(other);
-
-          // refers an earlier visited vertex
-        } else if (this.toPosition < other.toPosition) {
-          comparison = -1;
-
-          // refers a later visited vertex
-        } else {
-          comparison = 1;
-        }
-
-      }
-
-      // inverse direction
-    } else {
-      if (this.isBackward()) {
-        comparison = -1;
-      } else {
-        comparison = 1;
-      }
-    }
-
-    return comparison;
-  }
-  /**
-   * extracted method to compare DFS edges based on start, edge and edge labels
-   * as well as the traversal direction
-   * @param other other DFS edge
-   * @return comparison result
-   */
-  private int compareLabelsAndDirection(DfsEdge other) {
-    int comparison;
-
-    if (this.fromLabel < other.fromLabel) {
-      comparison = -1;
-    } else if (this.fromLabel > other.fromLabel) {
-      comparison = 1;
-    } else {
-      if (this.inDirection && !other.inDirection) {
-        comparison = -1;
-      } else if (!this.inDirection && other.inDirection) {
-        comparison = 1;
-      } else {
-        if (this.edgeLabel < other.edgeLabel) {
-          comparison = -1;
-        } else if (this.edgeLabel > other.edgeLabel) {
-          comparison = 1;
-        } else {
-          if (this.toLabel < other.toLabel) {
-            comparison = -1;
-          } else if (this.toLabel > other.toLabel) {
-            comparison = 1;
-          } else {
-            comparison = 0;
-          }
-        }
-      }
-    }
-    return comparison;
-  }
   /**
    * checks equality to other DFS edge
    * @param other other DFS edge

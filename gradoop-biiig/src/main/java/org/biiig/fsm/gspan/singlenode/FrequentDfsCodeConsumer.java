@@ -24,7 +24,7 @@ public class FrequentDfsCodeConsumer extends AbstractRunnable {
     worker.getGrowableDfsCodes().clear();
 
     for (DfsCode code : worker.getMaster().getGrowableDfsCodes()) {
-      code = code.clone();
+      code = code.newChild();
       if (worker.getDfsCodeSupports().containsKey(code)) {
         worker.getGrowableDfsCodes().add(code);
       }

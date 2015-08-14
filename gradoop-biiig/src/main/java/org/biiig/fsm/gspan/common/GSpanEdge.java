@@ -6,7 +6,7 @@ package org.biiig.fsm.gspan.common;
  * POJO describing an edge of a GSpan graph,
  * i.e., a directed edge providing an integer label
  */
-public class GSpanEdge implements Comparable<GSpanEdge> {
+public class GSpanEdge {
 
   /**
    * source vertex reference
@@ -40,26 +40,6 @@ public class GSpanEdge implements Comparable<GSpanEdge> {
 
   // override methods
 
-  /**
-   * comparator
-   * @param other other edge
-   * @return result of comparison
-   */
-  @Override
-  public int compareTo(GSpanEdge other) {
-
-    int comparison = this.sourceVertex.compareTo(other.sourceVertex);
-
-    if (comparison == 0) {
-      comparison = this.label - other.label;
-    }
-
-    if (comparison == 0) {
-      comparison = this.targetVertex.compareTo(other.targetVertex);
-    }
-
-    return comparison;
-  }
   /**
    * to string method
    * @return string representation

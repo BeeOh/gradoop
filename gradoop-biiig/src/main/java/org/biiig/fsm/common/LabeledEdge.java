@@ -5,8 +5,7 @@ package org.biiig.fsm.common;
  *
  * Created by p3et on 25.06.15.
  */
-public class LabeledEdge extends LabeledGraphElement
-  implements Comparable<LabeledEdge> {
+public class LabeledEdge extends LabeledGraphElement {
   /**
    * source vertex
    */
@@ -45,15 +44,15 @@ public class LabeledEdge extends LabeledGraphElement
    * determines smallest vertex from source and target in alphabetical order
    * @return alphabetically smaller vertex
    */
-  private LabeledVertex getMinVertex() {
-    return
-      sourceVertex.compareTo(targetVertex) < 0 ? sourceVertex : targetVertex;
+  public LabeledVertex getMinVertex() {
+    return new LabeledVertexComparator().compare(sourceVertex, targetVertex) <
+      0 ? sourceVertex : targetVertex;
   }
   /**
    * determines largest vertex from source and target in alphabetical order
    * @return alphabetically smaller vertex
    */
-  private LabeledVertex getMaxVertex() {
+  public LabeledVertex getMaxVertex() {
     return this.getOtherVertex(this.getMinVertex());
   }
   /**
@@ -73,42 +72,6 @@ public class LabeledEdge extends LabeledGraphElement
 
   // override methods
 
-  /**
-   * comparator
-   * @param other other edge
-   * @return comparison result
-   */
-  @Override
-  public int compareTo(LabeledEdge other) {
-
-    // minimum vertex label
-    int comparison = this.getMinVertex().compareTo(other.getMinVertex());
-
-    if (comparison == 0) {
-      // edge label
-      comparison = this.getLabel().compareTo(other.getLabel());
-
-      if (comparison == 0) {
-        // maximum vertex label
-        comparison = this.getMaxVertex().compareTo(other.getMaxVertex());
-
-        if (comparison == 0) {
-          // direction
-
-          if (this.getSourceVertex().compareTo(other.getSourceVertex()) == 0) {
-            // same direction
-            comparison = 0;
-          } else if (this.getSourceVertex() == this.getMinVertex()) {
-            comparison = -1;
-          } else {
-            comparison = 1;
-          }
-        }
-      }
-    }
-
-    return comparison;
-  }
   /**
    * to string method
    * @return string representation

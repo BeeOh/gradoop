@@ -11,10 +11,17 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * Created by peet on 13.08.15.
+ * Created by p3et on 13.08.15.
+ *
+ * class providing static methods for DFS code compression and decompression
  */
 public class DfsCodeCompressor {
-
+  /**
+   * compression
+   * @param dfsCode DFS code
+   * @return compressed byte array
+   * @throws IOException
+   */
   public static byte[] compress(DfsCode dfsCode) throws IOException {
     ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
     GZIPOutputStream gzipOS = new GZIPOutputStream(byteArrayOS);
@@ -23,7 +30,13 @@ public class DfsCodeCompressor {
     objectOS.close();
     return byteArrayOS.toByteArray();
   }
-
+  /**
+   * decompression
+   * @param bytes compressed byte array
+   * @return DFS code
+   * @throws IOException
+   * @throws ClassNotFoundException
+   */
   public static DfsCode decompress(byte[] bytes) throws IOException,
     ClassNotFoundException {
     ByteArrayInputStream byteArrayIS = new ByteArrayInputStream(bytes);

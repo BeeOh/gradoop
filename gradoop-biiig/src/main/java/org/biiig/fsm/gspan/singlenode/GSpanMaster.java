@@ -2,8 +2,9 @@ package org.biiig.fsm.gspan.singlenode;
 
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.biiig.fsm.gspan.common.DfsCode;
-import org.biiig.fsm.gspan.common.LabelSupport;
 import org.biiig.fsm.common.LabeledGraph;
 
 import java.util.ArrayList;
@@ -228,7 +229,7 @@ public class GSpanMaster {
 
     dictionary.clear();
 
-    NavigableSet<LabelSupport> frequentLabels = new TreeSet<>();
+    NavigableSet<Pair<String, Integer>> frequentLabels = new TreeSet<>();
 
     for (Map.Entry<String, Integer> labelSupport : labelSupports.entrySet()) {
       String label = labelSupport.getKey();
@@ -236,14 +237,14 @@ public class GSpanMaster {
 
       if (support >= minSupport) {
         frequentLabels.add(
-          new LabelSupport(label, support));
+          new ImmutablePair<>(label, support));
       }
     }
 
     Integer gSpanLabel = 0;
-    for (LabelSupport labelSupport : frequentLabels.descendingSet()) {
+    for (Pair<String, Integer> labelSupport : frequentLabels.descendingSet()) {
       gSpanLabel++;
-      dictionary.put(labelSupport.getLabel(), gSpanLabel);
+      dictionary.put(labelSupport.getKey(), gSpanLabel);
     }
   }
   /**
@@ -297,7 +298,7 @@ public class GSpanMaster {
       for (Map.Entry<DfsCode, Integer> workerDfsCodeSupport : worker
         .getDfsCodeSupports().entrySet()) {
 
-        DfsCode dfsCode = workerDfsCodeSupport.getKey().clone();
+        DfsCode dfsCode = workerDfsCodeSupport.getKey().newChild();
         Integer workerSupport = workerDfsCodeSupport.getValue();
         Integer globalSupport = dfsCodeSupports.get(dfsCode);
 

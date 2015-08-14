@@ -2,6 +2,8 @@ package org.biiig.fsm.common;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,25 +19,15 @@ import java.util.Set;
  *
  * Created by p3et on 25.06.15.
  */
-public class LabeledGraph implements Comparable<LabeledGraph> {
+public class LabeledGraph {
   /**
    * set of vertices
    */
-  private final Set<LabeledVertex> vertices = new HashSet<>();
+  private Set<LabeledVertex> vertices = new HashSet<>();
   /**
    * set of edges
    */
-  private final Set<LabeledEdge> edges = new HashSet<>();
-  /**
-   * outgoing vertex adjacency lists
-   */
-  private final Map<LabeledVertex, List<LabeledEdge>> vertexOutgoingEdgesMap =
-    new HashMap<>();
-  /**
-   * incoming vertex adjacency lists
-   */
-  private final Map<LabeledVertex, List<LabeledEdge>> vertexIncomingEdgesMap =
-    new HashMap<>();
+  private Set<LabeledEdge> edges = new HashSet<>();
 
   // behaviour
 
@@ -47,8 +39,6 @@ public class LabeledGraph implements Comparable<LabeledGraph> {
   public LabeledVertex newVertex(String label) {
     LabeledVertex vertex = new LabeledVertex(label);
     this.vertices.add(vertex);
-    vertexOutgoingEdgesMap.put(vertex, new ArrayList<LabeledEdge>());
-    vertexIncomingEdgesMap.put(vertex, new ArrayList<LabeledEdge>());
     return vertex;
   }
   /**
@@ -63,8 +53,6 @@ public class LabeledGraph implements Comparable<LabeledGraph> {
 
     LabeledEdge edge = new LabeledEdge(source, label, target);
     this.edges.add(edge);
-    vertexOutgoingEdgesMap.get(source).add(edge);
-    vertexIncomingEdgesMap.get(target).add(edge);
     return edge;
   }
 
@@ -79,7 +67,7 @@ public class LabeledGraph implements Comparable<LabeledGraph> {
 
     boolean isIsomorphic = false;
 
-    if (this.compareTo(other) == 0) {
+    if (this.compareInvariantsTo(other) == 0) {
       isIsomorphic = this.getAdjacencyMatrixCode()
         .compareTo(other.getAdjacencyMatrixCode()) == 0;
     }
@@ -91,82 +79,150 @@ public class LabeledGraph implements Comparable<LabeledGraph> {
    * @return string representation of the adjacency matrix
    */
   public String getAdjacencyMatrixCode() {
+
+    Map<LabeledVertex, Pair<Map<LabeledVertex, List<String>>,
+          Map<LabeledVertex, List<String>>>> index = getAdajcencyIndex();
+
     List<String> vertexCodes = new ArrayList<>();
 
     // for each vertex
     for (LabeledVertex vertex : vertices) {
 
-      // encode outgoing edges
-      Map<LabeledVertex, List<String>> targetVertexEdgeLabels = new HashMap<>();
+      Pair<Map<LabeledVertex, List<String>>, Map<LabeledVertex, List<String>>>
+        indexEntry = index.get(vertex);
 
-      for (LabeledEdge edge : vertexOutgoingEdgesMap.get(vertex)) {
+      // if vertex is not connected by any edge
+      if (indexEntry == null) {
+        // add only vertex label
+        vertexCodes.add(vertex.getLabel());
+      } else {
 
-        LabeledVertex targetVertex = edge.getTargetVertex();
-        List<String> edgeLabels = targetVertexEdgeLabels.get(targetVertex);
+        // encode outgoing edge and target vertex labels
+        String outgoingEdgesCode =
+          encodeVertexEdgeLabels(indexEntry.getKey());
 
-        if (edgeLabels == null) {
-          edgeLabels = new ArrayList<>();
-          targetVertexEdgeLabels.put(targetVertex, edgeLabels);
-        }
+        // encode incoming edge and source vertex labels
+        String incomingEdgesCode =
+          encodeVertexEdgeLabels(indexEntry.getValue());
 
-        edgeLabels.add(edge.getLabel());
+        // combine encoded edge labels
+        vertexCodes.add(vertex.getLabel() + "(" + outgoingEdgesCode + "," +
+          incomingEdgesCode + ")");
       }
-
-      String outgoingEdgesCode =
-        getVertexConnectionsCode(targetVertexEdgeLabels);
-
-      // encode incoming edges
-      Map<LabeledVertex, List<String>> sourceVertexEdgeLabels = new HashMap<>();
-
-      for (LabeledEdge edge : vertexIncomingEdgesMap.get(vertex)) {
-
-        LabeledVertex sourceVertex = edge.getSourceVertex();
-        List<String> edgeLabels = sourceVertexEdgeLabels.get(sourceVertex);
-
-        if (edgeLabels == null) {
-          edgeLabels = new ArrayList<>();
-          sourceVertexEdgeLabels.put(sourceVertex, edgeLabels);
-        }
-
-        edgeLabels.add(edge.getLabel());
-      }
-
-      String incomingEdgesCode =
-        getVertexConnectionsCode(sourceVertexEdgeLabels);
-
-      vertexCodes.add(vertex.getLabel() + "(" + outgoingEdgesCode + "," +
-        incomingEdgesCode + ")");
     }
 
     Collections.sort(vertexCodes);
 
     return StringUtils.join(vertexCodes, ",");
   }
+  /**
+   helper method of adjacency matrix code generation;
+   * @return am map with vertices as keys and a pair as index
+   * the pairs key is an outgoing vertex map with target vertex as key and all
+   * connecting edge labels as string list, the pairs value is an incoming
+   * vertex map with source vertex as key and all connecting edge labels as
+   * string list
+   */
+  private Map<LabeledVertex, Pair<Map<LabeledVertex, List<String>>,
+    Map<LabeledVertex, List<String>>>> getAdajcencyIndex() {
+    Map<LabeledVertex, Pair<Map<LabeledVertex, List<String>>,
+      Map<LabeledVertex, List<String>>>> index = new HashMap<>();
 
+    for (LabeledEdge edge : edges) {
+
+      // source index entry
+      LabeledVertex source = edge.getSourceVertex();
+      LabeledVertex target = edge.getTargetVertex();
+
+      Map<LabeledVertex, List<String>> outgoingEdgeLabelsMap =
+        getIndexEntry(index, source).getKey();
+
+      Map<LabeledVertex, List<String>> incomingEdgeLabelsMap =
+        getIndexEntry(index, target).getValue();
+
+      addEdgeAndVertexLabel(outgoingEdgeLabelsMap, target, edge);
+      addEdgeAndVertexLabel(incomingEdgeLabelsMap, source, edge);
+    }
+    return index;
+  }
+  /**
+   * helper method of adjacency matrix code generation;
+   * add an vertex as key and the label of tha label of an edge to the value
+   * list of the input map; if the vertex is not contained in the key set, a
+   * new string list is created
+   * @param vertexEdgeLabelsMap input map
+   * @param vertex key vertex
+   * @param edge edge to extract the label from
+   */
+  private void addEdgeAndVertexLabel(
+    Map<LabeledVertex, List<String>> vertexEdgeLabelsMap, LabeledVertex vertex,
+    LabeledEdge edge) {
+    List<String> outgoingEdgeLabels = vertexEdgeLabelsMap.get(vertex);
+
+    if (outgoingEdgeLabels == null) {
+      outgoingEdgeLabels = new ArrayList<>();
+      vertexEdgeLabelsMap.put(vertex, outgoingEdgeLabels);
+    }
+
+    outgoingEdgeLabels.add(edge.getLabel());
+  }
+  /**
+   * helper method of adjacency matrix code generation;
+   * get the value of a given map (index) for a given vertex; create a new
+   * entry if the vertex is not contained in the key set
+   * @param index input map
+   * @param vertex key vertex
+   * @return new or existing index entry
+   */
+  private Pair<Map<LabeledVertex, List<String>>, Map<LabeledVertex,
+    List<String>>> getIndexEntry(
+    Map<LabeledVertex, Pair<Map<LabeledVertex, List<String>>,
+      Map<LabeledVertex, List<String>>>> index,
+    LabeledVertex vertex) {
+
+    Pair<Map<LabeledVertex, List<String>>, Map<LabeledVertex, List<String>>>
+      indexEntry = index.get(vertex);
+
+    if (indexEntry == null) {
+      indexEntry = new ImmutablePair(new HashMap<>(), new HashMap<>());
+      index.put(vertex, indexEntry);
+    }
+
+    return indexEntry;
+  }
   /**
    * helper method of adjacency matrix code generation
    * @param vertexEdgeLabelsMap map of vertex and connecting edge labels
    * @return a string representing vertex labels and and connecting edge labels
    */
-  private String getVertexConnectionsCode(
+  private String encodeVertexEdgeLabels(
     Map<LabeledVertex, List<String>> vertexEdgeLabelsMap) {
+
     List<String> vertexConnectionCodes = new ArrayList<>();
+    String code;
 
-    for (Map.Entry<LabeledVertex, List<String>> vertexEdgeLabels :
-      vertexEdgeLabelsMap.entrySet()) {
+    if (vertexEdgeLabelsMap.isEmpty()) {
+      code = "()";
+    } else {
 
-      String vertexLabel = vertexEdgeLabels.getKey().getLabel();
-      List<String> edgeLabels = vertexEdgeLabels.getValue();
-      Collections.sort(edgeLabels);
+      for (Map.Entry<LabeledVertex, List<String>> vertexEdgeLabels :
+        vertexEdgeLabelsMap.entrySet()) {
 
-      // vertexLabel(edgeLabelA,..,edgeLabelZ)
-      vertexConnectionCodes.add(
-        vertexLabel + "(" + StringUtils.join(edgeLabels, ",") + ")");
+        String vertexLabel = vertexEdgeLabels.getKey().getLabel();
+        List<String> edgeLabels = vertexEdgeLabels.getValue();
+        Collections.sort(edgeLabels);
+
+        // vertexLabel(edgeLabelA,..,edgeLabelZ)
+        vertexConnectionCodes.add(
+          vertexLabel + "(" + StringUtils.join(edgeLabels, ",") + ")");
+      }
+
+      Collections.sort(vertexConnectionCodes);
+
+      code = "(" + StringUtils.join(vertexConnectionCodes, ",") + ")";
     }
 
-    Collections.sort(vertexConnectionCodes);
-
-    return "(" + StringUtils.join(vertexConnectionCodes, ",") + ")";
+    return code;
   }
 
   // override methods
@@ -176,43 +232,48 @@ public class LabeledGraph implements Comparable<LabeledGraph> {
    * @param other other graph
    * @return comparison result
    */
-  @Override
-  public int compareTo(LabeledGraph other) {
+  public int compareInvariantsTo(LabeledGraph other) {
     int comparison = this.vertices.size() - other.vertices.size();
 
     if (comparison == 0) {
       comparison = this.edges.size() - other.edges.size();
 
       if (comparison == 0) {
+
+        LabeledVertexComparator vertexComparator =
+          new LabeledVertexComparator();
+
         // compare vertex sets
         List<LabeledVertex> ownVertices = Lists.newArrayList(this.vertices);
         List<LabeledVertex> otherVertices = Lists.newArrayList(other.vertices);
 
-        Collections.sort(ownVertices);
-        Collections.sort(otherVertices);
+        Collections.sort(ownVertices, vertexComparator);
+        Collections.sort(otherVertices, vertexComparator);
 
         Iterator<LabeledVertex> ownVertexIterator = ownVertices.iterator();
         Iterator<LabeledVertex> otherVertexIterator = otherVertices.iterator();
 
         while (comparison == 0 && ownVertexIterator.hasNext()) {
-          comparison = ownVertexIterator.next().compareTo(
-            otherVertexIterator.next());
+          comparison = vertexComparator.compare(
+            ownVertexIterator.next(), otherVertexIterator.next());
         }
 
         if (comparison == 0) {
+          LabeledEdgeComparator edgeComparator = new LabeledEdgeComparator();
+
           // compare edge sets
           List<LabeledEdge> ownEdges = Lists.newArrayList(this.edges);
           List<LabeledEdge> otherEdges = Lists.newArrayList(other.edges);
 
-          Collections.sort(ownEdges);
-          Collections.sort(otherEdges);
+          Collections.sort(ownEdges, edgeComparator);
+          Collections.sort(otherEdges, edgeComparator);
 
           Iterator<LabeledEdge> ownEdgeIterator = ownEdges.iterator();
           Iterator<LabeledEdge> otherEdgeIterator = otherEdges.iterator();
 
           while (comparison == 0 && ownEdgeIterator.hasNext()) {
-            comparison = ownEdgeIterator.next().compareTo(
-              otherEdgeIterator.next());
+            comparison = edgeComparator.compare(
+              ownEdgeIterator.next(), otherEdgeIterator.next());
           }
         }
       }

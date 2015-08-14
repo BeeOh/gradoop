@@ -10,6 +10,7 @@ import org.biiig.fsm.gspan.common.GSpanVertex;
 import org.biiig.fsm.common.LabeledEdge;
 import org.biiig.fsm.common.LabeledGraph;
 import org.biiig.fsm.common.LabeledVertex;
+import org.biiig.fsm.gspan.common.GSpanVertexComparator;
 import org.biiig.fsm.gspan.common.SearchSpaceItem;
 
 import java.util.HashMap;
@@ -129,7 +130,8 @@ public class SearchSpaceInitializer extends AbstractRunnable {
                   gsEdge.getLabel(), 0, gsSourceVertex.getLabel());
                 mapper.map(gsSourceVertex);
                 // from source to target vertex
-              } else if (gsSourceVertex.compareTo(gsTargetVertex) <= 0) {
+              } else if (new GSpanVertexComparator().compare(
+                gsSourceVertex, gsTargetVertex) <= 0) {
                 dfsEdge = new DfsEdge(0, gsSourceVertex.getLabel(), true,
                   gsEdge.getLabel(), 1, gsTargetVertex.getLabel());
                 mapper.map(gsSourceVertex);

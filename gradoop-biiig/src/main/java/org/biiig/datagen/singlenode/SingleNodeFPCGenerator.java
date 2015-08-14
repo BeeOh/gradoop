@@ -7,17 +7,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by peet on 09.07.15.
+ * Created by p3et on 09.07.15.
+ *
+ * graph collection data generator
  */
 public class SingleNodeFPCGenerator {
+  /**
+   * starts generation
+   * @param collectionScaleFactor scale factor for collection size
+   * @param graphScaleFactor scale factor for graph size
+   * @return graph collection
+   */
   public List<LabeledGraph> generate(
     int collectionScaleFactor, int graphScaleFactor) {
 
-    int targetCollectionSize = collectionScaleFactor*10;
+    int targetCollectionSize = collectionScaleFactor * 10;
 
     List<LabeledGraph> graphs = new ArrayList<>();
 
-    for(int graphID = 0; graphID < targetCollectionSize; graphID++){
+    for (int graphID = 0; graphID < targetCollectionSize; graphID++) {
 
       LabeledGraph graph = new LabeledGraph();
       String edgeLabel = "G" + graphID;
@@ -40,7 +48,7 @@ public class SingleNodeFPCGenerator {
         LabeledVertex vK = graph.newVertex("K");
 
         // 100% 1-edge graph
-        graph.newEdge(vA,"100", vB);
+        graph.newEdge(vA, "100", vB);
 
         // 90% 2-edge graph
         graph.newEdge(vB, support <= 90 ? "90" : edgeLabel, vC);
