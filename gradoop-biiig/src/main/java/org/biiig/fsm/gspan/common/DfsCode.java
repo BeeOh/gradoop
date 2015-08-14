@@ -3,6 +3,7 @@ package org.biiig.fsm.gspan.common;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
  *
  * POJO representing a GSpan DFS code
  */
-public class DfsCode implements Comparable<DfsCode>, Cloneable {
+public class DfsCode implements Comparable<DfsCode>, Cloneable, Serializable {
   /**
    * list of contained DFS edges, where index is the discovery position (time)
    */

@@ -3,6 +3,8 @@ package org.biiig.fsm.gspan.common;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.io.Serializable;
+
 /**
  * Created by p3et on 01.07.15.
  *
@@ -10,7 +12,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  * GSpan Technical Report but extended by a direction bit expressing if the
  * edge was traversed in direction or inversely
  */
-public class DfsEdge implements Comparable<DfsEdge> {
+public class DfsEdge implements Comparable<DfsEdge>, Serializable {
   /**
    * discovery position (time) of the traversal start vertex
    */
