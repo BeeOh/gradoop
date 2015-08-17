@@ -7,7 +7,7 @@
     <parent>
         <artifactId>gradoop</artifactId>
         <groupId>de.uni-leipzig.de.dbs</groupId>
-        <version>0.0.2</version>
+        <version>0.0.3</version>
     </parent>
     <artifactId>gradoop-flink</artifactId>
     <packaging>jar</packaging>
@@ -88,6 +88,11 @@
             <artifactId>flink-gelly</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-hbase</artifactId>
+        </dependency>
+
         <!-- Testing -->
 
         <!-- Gradoop -->
@@ -117,6 +122,12 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>pl.pragmatists</groupId>
+            <artifactId>JUnitParams</artifactId>
             <scope>test</scope>
         </dependency>
 

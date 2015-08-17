@@ -17,37 +17,37 @@
 
 package org.gradoop.model;
 
-import com.google.common.collect.Lists;
-import javafx.util.Pair;
-import org.gradoop.model.helper.Aggregate;
-import org.gradoop.model.helper.Algorithm;
-import org.gradoop.model.helper.BinaryFunction;
+import org.apache.commons.lang.NotImplementedException;
 import org.gradoop.model.helper.Order;
 import org.gradoop.model.helper.Predicate;
-import org.gradoop.model.helper.SystemProperties;
 import org.gradoop.model.helper.UnaryFunction;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.gradoop.model.impl.DefaultEdgeData;
+import org.gradoop.model.impl.DefaultGraphData;
+import org.gradoop.model.impl.DefaultVertexData;
+import org.gradoop.model.impl.EPGMDatabase;
+import org.gradoop.model.impl.GraphCollection;
+import org.gradoop.model.impl.LogicalGraph;
+import org.gradoop.model.impl.operators.Aggregation;
+import org.gradoop.model.impl.operators.Combination;
+import org.gradoop.model.impl.operators.Projection;
+import org.gradoop.model.operators.UnaryCollectionToCollectionOperator;
+import org.gradoop.model.operators.UnaryGraphToCollectionOperator;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Set;
+@SuppressWarnings({"unchecked", "UnusedAssignment"})
+public abstract class WorkflowTest {
 
-@RunWith(MockitoJUnitRunner.class)
-public class WorkflowTest {
-
-  @Test
-  public void summarizedCommunities() {
-    EPGraphStore db = Mockito.mock(EPGraphStore.class);
+  public void summarizedCommunities() throws Exception {
+    EPGMDatabase db = Mockito.mock(EPGMDatabase.class);
 
     // read full graph from database
-    EPGraph dbGraph = db.getDatabaseGraph();
+    LogicalGraph dbGraph = db.getDatabaseGraph();
 
     // extract friendships
-    EPGraphCollection friendships =
-      dbGraph.match("(a)-(c)->(b)", new Predicate<EPPatternGraph>() {
+    GraphCollection friendships =
+      dbGraph.match("(a)-(c)->(b)", new Predicate<PatternGraph>() {
         @Override
-        public boolean filter(EPPatternGraph graph) {
+        public boolean filter(PatternGraph graph) {
           return graph.getVertex("a").getLabel().equals("Person") &&
             graph.getEdge("c").getLabel().equals("knows") &&
             graph.getVertex("b").getLabel().equals("Person");
@@ -55,60 +55,34 @@ public class WorkflowTest {
       });
 
     // build single graph
-    EPGraph knowsGraph =
-      friendships.reduce(new BinaryFunction<EPGraph, EPGraph>() {
-        @Override
-        public EPGraph execute(EPGraph first, EPGraph second) {
-          return first.combine(second);
-        }
-      });
+    LogicalGraph knowsGraph = friendships.reduce(new Combination());
 
     // apply label propagation
-    knowsGraph = knowsGraph
-      .callForGraph(Algorithm.LABEL_PROPAGATION, "propertyKey", "community");
+    GraphCollection communities =
+      knowsGraph.callForCollection(new LP("communityID"));
+    // and build one graph
+    knowsGraph = communities.reduce(new Combination());
 
     // summarize communities
-    knowsGraph
-      .summarize(Lists.newArrayList(SystemProperties.TYPE.name(), "city"),
-        new Aggregate<Pair<Vertex, Set<Vertex>>, Vertex>() {
-          @Override
-          public Vertex aggregate(Pair<Vertex, Set<Vertex>> entity) {
-            Vertex summarizedVertex = entity.getKey();
-            summarizedVertex.addProperty("count", entity.getValue().size());
-            return summarizedVertex;
-          }
-        }, Lists.newArrayList(SystemProperties.TYPE.name()),
-        new Aggregate<Pair<Edge, Set<Edge>>, Edge>() {
-          @Override
-          public Edge aggregate(Pair<Edge, Set<Edge>> entity) {
-            Edge summarizedEdge = entity.getKey();
-            summarizedEdge.addProperty("count", entity.getValue().size());
-            return summarizedEdge;
-          }
-        });
-
-    // store the resulting summarized graph
-    db.writeGraph(knowsGraph);
+    knowsGraph = knowsGraph.summarize("city", "since");
   }
 
-  @Test
-  public void topRevenueBusinessProcess() {
-    EPGraphStore db = Mockito.mock(EPGraphStore.class);
+  public void topRevenueBusinessProcess() throws Exception {
+    EPGMDatabase db = Mockito.mock(EPGMDatabase.class);
 
     // read full graph from database
-    EPGraph dbGraph = db.getDatabaseGraph();
+    LogicalGraph dbGraph = db.getDatabaseGraph();
 
     // extract business process instances
-    EPGraphCollection btgs =
-      dbGraph.callForCollection(Algorithm.BUSINESS_TRANSACTION_GRAPHS);
+    GraphCollection btgs = dbGraph.callForCollection(new BTG());
 
     // define predicate function (graph contains invoice)
-    final Predicate<EPGraph> predicate = new Predicate<EPGraph>() {
+    final Predicate<LogicalGraph> predicate = new Predicate<LogicalGraph>() {
       @Override
-      public boolean filter(EPGraph graph) {
-        return graph.getVertices().select(new Predicate<Vertex>() {
+      public boolean filter(LogicalGraph graph) throws Exception {
+        return graph.getVertices().filter(new Predicate<VertexData>() {
           @Override
-          public boolean filter(Vertex entity) {
+          public boolean filter(VertexData entity) {
             return entity.getLabel().equals("SalesInvoice");
           }
         }).size() > 0;
@@ -116,129 +90,185 @@ public class WorkflowTest {
     };
 
     // define aggregate function (revenue per graph)
-    final Aggregate<EPGraph, Double> aggregateFunc =
-      new Aggregate<EPGraph, Double>() {
-        @Override
-        public Double aggregate(EPGraph entity) {
-          Double sum = 0.0;
-          for (Double v : entity.getVertices()
-            .values(Double.class, "revenue")) {
-            sum += v;
-          }
-          return sum;
+    final UnaryFunction<LogicalGraph<DefaultVertexData, DefaultEdgeData,
+      DefaultGraphData>, Double>
+      aggregateFunc = null;
+    new UnaryFunction<LogicalGraph<DefaultVertexData, DefaultEdgeData,
+      DefaultGraphData>, Double>() {
+      @Override
+      public Double execute(
+        LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+          entity) {
+        Double sum = 0.0;
+        for (Double v : entity.getVertices().values(Double.class, "revenue")) {
+          sum += v;
         }
-      };
+        return sum;
+      }
+    };
 
     // apply predicate and aggregate function
-    EPGraphCollection invBtgs =
-      btgs.select(predicate).apply(new UnaryFunction<EPGraph, EPGraph>() {
+    GraphCollection invBtgs =
+      btgs.select(predicate).apply(new Aggregation<>("revenue", aggregateFunc));
+
+    // sort graphs by revenue and return top 100
+    GraphCollection topBTGs =
+      invBtgs.sortBy("revenue", Order.DESCENDING).top(100);
+
+    // compute overlap to find master store objects (e.g. Employee)
+    LogicalGraph topOverlap = topBTGs.reduce(new Combination());
+  }
+
+  public void clusterCharacteristicPatterns() throws Exception {
+    EPGMDatabase db = Mockito.mock(EPGMDatabase.class);
+
+    // generate base collection
+    GraphCollection btgs = db.getDatabaseGraph()
+      .callForCollection(new UnaryGraphToCollectionOperator() {
         @Override
-        public EPGraph execute(EPGraph entity) {
-          return entity.aggregate("revenue", aggregateFunc);
+        public GraphCollection execute(LogicalGraph graph) {
+          // TODO execute BTG Computation
+          throw new NotImplementedException();
+        }
+
+        @Override
+        public String getName() {
+          return "BTGComputation";
         }
       });
 
-    // sort graphs by revenue and return top 100
-    EPGraphCollection topBTGs =
-      invBtgs.sortBy("revenue", Order.DESCENDING).top(100);
-
-    // compute overlap to find master data objects (e.g. Employee)
-    EPGraph topOverlap = topBTGs.reduce(new BinaryFunction<EPGraph, EPGraph>() {
-      @Override
-      public EPGraph execute(EPGraph first, EPGraph second) {
-        return first.combine(second);
-      }
-    });
-  }
-
-  @Test
-  public void clusterCharacteristicPatterns() {
-    EPGraphStore db = Mockito.mock(EPGraphStore.class);
-
-    // generate base collection
-    EPGraphCollection btgs = db.getDatabaseGraph()
-      .callForCollection(Algorithm.BUSINESS_TRANSACTION_GRAPHS);
-
     // define aggregate function (profit per graph)
-    final Aggregate<EPGraph, Double> aggFunc =
-      new Aggregate<EPGraph, Double>() {
-        @Override
-        public Double aggregate(EPGraph entity) {
-          Double revenue = 0.0;
-          Double expense = 0.0;
-          for (Double v : entity.getVertices()
-            .values(Double.class, "revenue")) {
-            revenue += v;
-          }
-          for (Double v : entity.getVertices()
-            .values(Double.class, "expense")) {
-            expense += v;
-          }
-          return revenue - expense;
+    final UnaryFunction<LogicalGraph<DefaultVertexData, DefaultEdgeData,
+      DefaultGraphData>, Double>
+      aggFunc = null;
+    new UnaryFunction<LogicalGraph<DefaultVertexData, DefaultEdgeData,
+      DefaultGraphData>, Double>() {
+      @Override
+      public Double execute(
+        LogicalGraph<DefaultVertexData, DefaultEdgeData, DefaultGraphData>
+          entity) {
+        Double revenue = 0.0;
+        Double expense = 0.0;
+        for (Double v : entity.getVertices().values(Double.class, "revenue")) {
+          revenue += v;
         }
-      };
+        for (Double v : entity.getVertices().values(Double.class, "expense")) {
+          expense += v;
+        }
+        return revenue - expense;
+      }
+    };
 
     // apply aggregate function on btgs
-    btgs = btgs.apply(new UnaryFunction<EPGraph, EPGraph>() {
-      @Override
-      public EPGraph execute(EPGraph entity) {
-        return entity.aggregate("profit", aggFunc);
-      }
-    });
+    btgs = btgs.apply(new Aggregation<>("profit", aggFunc));
 
     // vertex function for projection
-    final UnaryFunction<Vertex, Vertex> vertexFunc =
-      new UnaryFunction<Vertex, Vertex>() {
+    final UnaryFunction<VertexData, VertexData> vertexFunc =
+      new UnaryFunction<VertexData, VertexData>() {
         @Override
-        public Vertex execute(Vertex entity) {
-          Vertex newVertex = Mockito.mock(Vertex.class);
+        public VertexData execute(VertexData entity) {
+          VertexData newVertex = Mockito.mock(VertexData.class);
           if ((Boolean) entity.getProperty("IsMasterData")) {
             newVertex.setLabel(entity.getProperty("sourceID").toString());
           } else {
             newVertex.setLabel(entity.getLabel());
           }
-          newVertex.addProperty("result", entity.getProperty("result"));
+          newVertex.setProperty("result", entity.getProperty("result"));
           return newVertex;
         }
       };
 
     // edge function for projection
-    final UnaryFunction<Edge, Edge> edgeFunc = new UnaryFunction<Edge, Edge>() {
-      @Override
-      public Edge execute(Edge entity) {
-        Edge newEdge = Mockito.mock(Edge.class);
-        newEdge.setLabel(entity.getLabel());
-        return newEdge;
-      }
-    };
+    final UnaryFunction<EdgeData, EdgeData> edgeFunc =
+      new UnaryFunction<EdgeData, EdgeData>() {
+        @Override
+        public EdgeData execute(EdgeData entity) {
+          EdgeData newEdge = Mockito.mock(EdgeData.class);
+          newEdge.setLabel(entity.getLabel());
+          return newEdge;
+        }
+      };
 
     // apply projection on all btgs
-    btgs = btgs.apply(new UnaryFunction<EPGraph, EPGraph>() {
-      @Override
-      public EPGraph execute(EPGraph entity) {
-        return entity.project(vertexFunc, edgeFunc);
-      }
-    });
+    btgs = btgs.apply(new Projection(vertexFunc, edgeFunc));
 
     // select profit and loss clusters
-    EPGraphCollection profitBtgs = btgs.select(new Predicate<EPGraph>() {
+    GraphCollection profitBtgs = btgs.filter(new Predicate<GraphData>() {
       @Override
-      public boolean filter(EPGraph entity) {
+      public boolean filter(GraphData entity) {
         return (Double) entity.getProperty("result") >= 0;
       }
     });
-    EPGraphCollection lossBtgs = btgs.difference(profitBtgs);
+    GraphCollection lossBtgs = btgs.difference(profitBtgs);
 
-    EPGraphCollection profitFreqPats = profitBtgs
-      .callForCollection(Algorithm.FREQUENT_SUBGRAPHS, "threshold", "0.7");
-
-    EPGraphCollection lossFreqPats = lossBtgs
-      .callForCollection(Algorithm.FREQUENT_SUBGRAPHS, "threshold", "0.7");
+    GraphCollection profitFreqPats =
+      profitBtgs.callForCollection(new FSM(0.7f));
+    GraphCollection lossFreqPats = lossBtgs.callForCollection(new FSM(0.7f));
 
     // determine cluster characteristic patterns
-    EPGraphCollection trivialPats = profitFreqPats.intersect(lossFreqPats);
-    EPGraphCollection profitCharPatterns =
-      profitFreqPats.difference(trivialPats);
-    EPGraphCollection lossCharPatterns = lossFreqPats.difference(trivialPats);
+    GraphCollection trivialPats = profitFreqPats.intersect(lossFreqPats);
+    GraphCollection profitCharPatterns = profitFreqPats.difference(trivialPats);
+    GraphCollection lossCharPatterns = lossFreqPats.difference(trivialPats);
+  }
+
+  private static class FSM implements UnaryCollectionToCollectionOperator {
+
+    private final float threshold;
+
+    public FSM(float threshold) {
+
+      this.threshold = threshold;
+    }
+
+    @Override
+    public String getName() {
+      return "FSM";
+    }
+
+    @Override
+    public GraphCollection execute(GraphCollection collection) {
+      throw new NotImplementedException();
+    }
+  }
+
+  private static class LP implements UnaryGraphToCollectionOperator {
+
+    private final String propertyKey;
+
+    public LP(String propertyKey) {
+
+      this.propertyKey = propertyKey;
+    }
+
+    @Override
+    public GraphCollection execute(LogicalGraph graph) {
+      throw new NotImplementedException();
+    }
+
+    @Override
+    public String getName() {
+      return "LabelPropagation";
+    }
+  }
+
+  private static class BTG implements UnaryGraphToCollectionOperator {
+
+    @Override
+    public GraphCollection execute(LogicalGraph graph) {
+      // TODO execute BTG Computation
+      throw new NotImplementedException();
+    }
+
+    @Override
+    public String getName() {
+      return "BTGComputation";
+    }
+  }
+
+  private interface PatternGraph {
+
+    VertexData getVertex(String variable);
+
+    EdgeData getEdge(String variable);
   }
 }
